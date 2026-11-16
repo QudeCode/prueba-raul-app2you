@@ -44,10 +44,13 @@
 - Una reserva ocupa un único día (también los vehículos).
 - La disponibilidad por horas se calcula sobre el día entero (00:00–24:00), sin horario laboral.
 - Política de cancelación (libre por cada recurso, independientemente del tipo):
-  - Flexible: cancelar hasta 1h antes; transferir en cualquier momento.
-  - Moderada: hasta 24h antes solo cancelar; pasado ese límite solo transferir.
+  - Flexible: cancelar hasta 1h antes; transferir hasta el inicio.
+  - Moderada: hasta 24h antes solo cancelar; pasado ese límite solo transferir (hasta el inicio).
   - Bloqueada: ni cancelar ni transferir.
+  - Una reserva que ya ha comenzado no se puede transferir.
 - Sin login: el usuario actual se carga directamente en el frontend, para poder cambiar de rol fácilmente.
+- Se desarrollan las dos partes: backend (API + BD) y frontend (consume la API real).
+- Asistentes de sala (`asistentes_sala`, opcional): solo se informa en salas con aforo compartido; en el resto de recursos va vacío, porque la reserva ocupa el recurso entero.
 
 ## Datos relevantes
 ### Tipos de recurso

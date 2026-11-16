@@ -37,7 +37,7 @@ entity reserva {
   * fecha : DATE
   hora_inicio : TIME
   hora_fin : TIME
-  * cantidad : INTEGER
+  asistentes_sala : INTEGER
   * estado : VARCHAR
   * creada_en : DATETIME
 }

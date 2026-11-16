@@ -1,6 +1,8 @@
 # Reservas — prueba técnica
 
-Sistema de reservas de recursos empresariales (ver [enunciado](docs/prova_tecnica_enunciat.md)).
+Sistema de reservas de recursos empresariales (ver [enunciado](docs/enunciado.md)).
+
+Las reglas de negocio acordadas están en [docs/reglas_negocio.md](docs/reglas_negocio.md).
 
 | Capa     | Tecnología       | Carpeta         |
 |----------|------------------|-----------------|
@@ -50,5 +52,5 @@ npm start
 ├── src/
 │   ├── frontend/        # Angular
 │   └── backend/         # FastAPI
-└── docs/                # enunciado, apuntes y diagramas
+└── docs/                # enunciado, apuntes, reglas de negocio y diagramas
 ```
