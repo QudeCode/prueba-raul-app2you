@@ -52,5 +52,9 @@ npm start
 ├── src/
 │   ├── frontend/        # Angular
 │   └── backend/         # FastAPI
-└── docs/                # enunciado, apuntes, reglas de negocio y diagramas
+├── docs/                # documentación del proyecto
+└── .claude/             # material de trabajo del asistente de desarrollo
 ```
+
+- **`docs/`** es para cualquier lector: el enunciado, las reglas de negocio acordadas, los apuntes con las decisiones de negocio, los diagramas de clases y de base de datos, y las decisiones técnicas con su porqué.
+- **`.claude/`** es el material de trabajo de Claude Code, el asistente usado durante el desarrollo: el contexto que necesita cada agente, los planes de implementación y las notas para retomar el trabajo entre sesiones. No hace falta leerlo para entender el proyecto.

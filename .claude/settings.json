@@ -3,7 +3,9 @@
   "enabledPlugins": {
     "core@ai-bank": true,
     "dev@ai-bank": true,
-    "meta@ai-bank": true
+    "meta@ai-bank": true,
+    "stack-nestjs@ai-bank": false,
+    "stack-react@ai-bank": false
   },
   "extraKnownMarketplaces": {
     "ai-bank": {
@@ -13,5 +15,13 @@
       },
       "autoUpdate": true
     }
+  },
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./src/backend/.env)",
+      "Read(./src/backend/.env.*)"
+    ]
   }
 }
