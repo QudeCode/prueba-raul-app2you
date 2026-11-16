@@ -1,0 +1,17 @@
+{
+  "enableWorkflows": true,
+  "enabledPlugins": {
+    "core@ai-bank": true,
+    "dev@ai-bank": true,
+    "meta@ai-bank": true
+  },
+  "extraKnownMarketplaces": {
+    "ai-bank": {
+      "source": {
+        "source": "github",
+        "repo": "QudeCode/ai-bank"
+      },
+      "autoUpdate": true
+    }
+  }
+}

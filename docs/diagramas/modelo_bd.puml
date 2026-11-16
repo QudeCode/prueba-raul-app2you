@@ -1,0 +1,49 @@
+@startuml modelo_bd
+title Modelo de base de datos - Reserva de Recursos
+
+hide circle
+skinparam linetype polyline
+skinparam nodesep 60
+skinparam ranksep 60
+
+entity usuario {
+  * id : INTEGER <<PK>>
+  --
+  * nombre : VARCHAR
+  * apellidos : VARCHAR
+  * rol : VARCHAR
+}
+
+entity recurso {
+  * id : INTEGER <<PK>>
+  --
+  * tipo : VARCHAR
+  * nombre : VARCHAR
+  * descripcion : TEXT
+  * politica_cancelacion : VARCHAR
+  capacidad_maxima : INTEGER
+  aforo_compartido : BOOLEAN
+  matricula : VARCHAR
+  plazas : INTEGER
+  numero_serie : VARCHAR
+}
+
+entity reserva {
+  * id : INTEGER <<PK>>
+  --
+  * recurso_id : INTEGER <<FK>>
+  * titular_id : INTEGER <<FK>>
+  aprobada_por_id : INTEGER <<FK>>
+  * fecha : DATE
+  hora_inicio : TIME
+  hora_fin : TIME
+  * cantidad : INTEGER
+  * estado : VARCHAR
+  * creada_en : DATETIME
+}
+
+reserva }o-down-|| recurso : recurso_id
+reserva }o-left-|| usuario : titular_id
+reserva }o-left-o| usuario : aprobada_por_id
+
+@enduml

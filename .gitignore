@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+
+# Editor / SO
+.DS_Store
+.devcontainer/certificados/*.crt
+
+# Devcontainer
+.devcontainer/

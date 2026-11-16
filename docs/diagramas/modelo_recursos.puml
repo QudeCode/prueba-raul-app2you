@@ -1,0 +1,94 @@
+@startuml modelo_recursos
+title Modelo de datos - Reserva de Recursos
+
+skinparam classAttributeIconSize 0
+skinparam linetype polyline
+skinparam nodesep 60
+skinparam ranksep 60
+hide empty members
+
+package Recursos {
+  abstract class Recurso {
+    nombre : String
+    descripcion : String
+    politicaCancelacion : PoliticaCancelacion
+  }
+
+  class SalaReunion {
+    {static} modalidadReserva : ModalidadReserva = POR_HORAS
+    {static} imagen : String = "sala.png"
+    capacidadMaxima : Integer
+    aforoCompartido : Boolean
+  }
+
+  class Vehiculo {
+    {static} modalidadReserva : ModalidadReserva = DIA_COMPLETO
+    {static} imagen : String = "vehiculo.png"
+    matricula : String
+    plazas : Integer
+  }
+
+  class Equipo {
+    {static} modalidadReserva : ModalidadReserva = AMBAS
+    {static} imagen : String = "equipo.png"
+    numeroSerie : String
+  }
+
+  enum ModalidadReserva {
+    POR_HORAS
+    DIA_COMPLETO
+    AMBAS
+  }
+
+  enum PoliticaCancelacion {
+    FLEXIBLE
+    MODERADA
+    BLOQUEADA
+  }
+
+  Recurso <|-- SalaReunion
+  Recurso <|-- Vehiculo
+  Recurso <|-- Equipo
+}
+
+package Usuarios {
+  class Usuario {
+    nombre : String
+    apellidos : String
+    rol : Rol
+  }
+
+  enum Rol {
+    TRABAJADOR
+    RESPONSABLE
+  }
+}
+
+package Reservas {
+  class Reserva {
+    fecha : Date
+    horaInicio : Time
+    horaFin : Time
+    cantidad : Integer
+    estado : EstadoReserva
+    creadaEn : DateTime
+  }
+
+  enum EstadoReserva {
+    PENDIENTE
+    APROBADA
+    RECHAZADA
+    CANCELADA
+  }
+}
+
+Reserva "*" -down-> "1" Recurso
+Reserva "*" -left-> "1" Usuario : titular
+Reserva "*" -left-> "0..1" Usuario : aprobadaPor
+
+Reserva -[hidden]right- EstadoReserva
+Usuario -[hidden]down- Rol
+Recurso -[hidden]right- PoliticaCancelacion
+PoliticaCancelacion -[hidden]down- ModalidadReserva
+
+@enduml
