@@ -18,3 +18,4 @@
 - Las reglas que cruzan tablas (modalidad según tipo, `asistentes_sala` solo en salas con aforo compartido) van en el servicio, no en CHECK.
 - Una reserva por horas acaba como muy tarde a las 23:59 (decisión 0004).
 - Los servicios que escriben hacen commit explícito; `get_session` nunca hace commit (decisión 0002).
+- Si no hay código que explorar (módulo o proyecto nuevo), el plan puede escribirlo la sesión principal con el formato de dev:arquitecto; la revisión con dev:revisar-plan no se salta.
