@@ -4,7 +4,7 @@
 `.claude/plans/<slug>.md`, slug en kebab-case y en español.
 
 ## Arquitectura vigente
-- Decisiones 0001 a 0006 en `docs/decisiones/` (capas, stack, PostgreSQL, enums y CHECK, herencia de recursos, idioma).
+- Decisiones 0001 a 0007 en `docs/decisiones/` (capas, stack, PostgreSQL —0003 sustituida por la 0007, Docker Compose—, enums y CHECK, herencia de recursos, idioma).
 - Modelo: `docs/diagramas/modelo_recursos.puml` (clases) y `docs/diagramas/modelo_bd.puml` (tablas).
 - Reglas de negocio numeradas: `docs/reglas_negocio.md`. Un plan las cita por número.
 

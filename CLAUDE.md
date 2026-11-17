@@ -4,6 +4,7 @@ Sistema de reservas de recursos empresariales (salas, vehículos, equipos) para 
 
 ## Comandos
 Todo se ejecuta en la máquina local, que es la referencia: si algo funciona en el entorno de Claude y no en local, manda la máquina local.
+- Base de datos: `docker compose up -d` (en la raíz, desde una terminal local, no la del devcontainer) → PostgreSQL en `localhost:5432`
 - Backend: `cd src/backend && source .venv/bin/activate && uvicorn app.main:app --reload` → http://localhost:8000/docs
 - Instalar backend: `pip install -r requirements.txt` (dentro de `src/backend`, con el `.venv` activo)
 - Datos de prueba (borra y recrea las tablas): `python -m app.seed`
@@ -14,7 +15,7 @@ Todo se ejecuta en la máquina local, que es la referencia: si algo funciona en 
 ## Reglas duras
 - Sin tests en el repositorio: el enunciado no los pide y el tiempo se dedica al análisis, el modelado y la implementación. Claude puede probar con scripts temporales fuera del repo.
 - `src/backend/.venv` es el de la máquina local: Claude no lo usa ni lo modifica. Para probar, Claude usa un venv propio fuera del repo.
-- PostgreSQL está instalado en la máquina local, no en el devcontainer ni en Docker. Desde el contenedor se llega por `host.docker.internal:5432`.
+- PostgreSQL corre en Docker Compose (decisión 0007), arrancado en la máquina local. Desde el contenedor se llega por `host.docker.internal:5432`.
 - Antes de proponer algo, respetar el modelo y las reglas: `docs/reglas_negocio.md` (reglas numeradas) y los diagramas de `docs/diagramas/`.
 - Diagramas PlantUML: solo clases, atributos, relaciones y enums; sin métodos, notas ni comentarios.
 

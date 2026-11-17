@@ -14,7 +14,7 @@ Ninguna: no hay plugin de stack para FastAPI ni Angular.
 - `src/backend/.venv` (es el de la máquina local) y cualquier `.env`.
 
 ## Cómo verificar lo que implementas
-Con un venv propio fuera del repo (`pip install -r src/backend/requirements.txt`) y PostgreSQL en `host.docker.internal:5432`. El resultado en la máquina local es el que vale.
+Con un venv propio fuera del repo (`pip install -r src/backend/requirements.txt`) y el PostgreSQL de Docker Compose en `host.docker.internal:5432`. El resultado en la máquina local es el que vale.
 
 ## Gotchas
 - No añadir tests ni dependencias de test.

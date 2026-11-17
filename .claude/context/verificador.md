@@ -1,7 +1,7 @@
 # Contexto · verificador
 
 ## Dónde se ejecuta
-En el devcontainer, con un venv propio fuera del repo (nunca `src/backend/.venv`). PostgreSQL en `host.docker.internal:5432`. Si algo falla solo por el entorno del contenedor, dilo: la referencia es la máquina local.
+En el devcontainer, con un venv propio fuera del repo (nunca `src/backend/.venv`). El PostgreSQL de Docker Compose en `host.docker.internal:5432`. Si algo falla solo por el entorno del contenedor, dilo: la referencia es la máquina local.
 
 ## Rama base
 `master`.

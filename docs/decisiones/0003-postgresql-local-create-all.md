@@ -1,6 +1,6 @@
 # 0003 · PostgreSQL local y esquema con create_all
 
-Estado: aceptada
+Estado: sustituida por [0007](0007-postgresql-docker-compose.md)
 Tipo: ADR
 
 ## Contexto

@@ -12,6 +12,6 @@
 ## Fuera de alcance por defecto
 - Pedir tests (el proyecto no los lleva, a propósito).
 - Autenticación real (el usuario actual llega por cabecera `X-Usuario-Id`).
-- Migraciones, Docker o despliegue (decisión 0003).
+- Migraciones o despliegue (decisión 0007).
 
 ## Gotchas
