@@ -65,7 +65,8 @@ Se dejan para el plan de reservas, que es donde se usan: los errores del dominio
   - `get_session()`: abre la sesión y la cierra al acabar. Si quedó algo sin confirmar, se deshace; nunca hace commit;
   - `check_enum(columna, enum, nombre)`: crea el `CheckConstraint` a partir de los valores del `StrEnum`;
   - `recrear_esquema(engine)`: importa `app.entidades` y ejecuta `drop_all` + `create_all`.
-- `entidades.py`: importa las tres entidades para que todas queden registradas. Lo usan `main.py` y `seed.py`.
+- `entidades.py` (tarea 3, cuando existen las entidades): importa las tres entidades para que todas queden registradas. Lo usan `main.py`, `seed.py` y `recrear_esquema`.
+- Columnas de enum: `mapped_column(String(<n>))` más su `check_enum`. Sin el `String` explícito, SQLAlchemy crearía un ENUM nativo de PostgreSQL, que la decisión 0004 descarta.
 - `common/enums.py`, con los valores copiados de `modelo_recursos.puml` (el valor de cada miembro es igual a su nombre):
   - `Rol`: TRABAJADOR, RESPONSABLE
   - `TipoRecurso`: SALA_REUNION, VEHICULO, EQUIPO
@@ -143,8 +144,8 @@ Se dejan para el plan de reservas, que es donde se usan: los errores del dominio
 
 ## Tareas (en orden)
 1. Infraestructura: `.env.example`, `.gitignore` y `requirements.txt`.
-2. Base común: config, database, `entidades.py` y enums.
-3. Las tres entidades y el script de datos de prueba. Comprobar en `psql` las tablas y los `CHECK`.
+2. Base común: config, database y enums.
+3. Las tres entidades, `entidades.py` y el script de datos de prueba. Comprobar en `psql` las tablas y los `CHECK`, y que `\dT` no lista tipos enum.
 4. Módulo usuarios y `GET /usuarios`.
 5. Módulo recursos y `GET /recursos`.
 6. README, `modelo_bd.puml` y la regla 2.

@@ -1,3 +1,5 @@
-<h1>Hello world</h1>
+@for (r of respuestas(); track r.ruta) {
+  <p>GET {{ r.ruta }} → {{ r.resultado }}</p>
+}
 
 <router-outlet />
