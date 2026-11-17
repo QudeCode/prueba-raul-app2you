@@ -15,7 +15,7 @@ Lo que ha decidido el usuario:
 - código en español;
 - alcance "estructura + 2 lecturas";
 - sin tests en el repositorio (el enunciado no los pide);
-- PostgreSQL instalado en la máquina de quien ejecuta, sin Docker ni base de datos dentro del devcontainer;
+- PostgreSQL en Docker Compose (decisión 0007, que sustituye a la 0003: al empezar la tarea 3 resultó que no había PostgreSQL instalado en la máquina);
 - las reservas por horas acaban como muy tarde a las 23:59.
 
 ## Mapa del código
@@ -42,7 +42,7 @@ Lo que ha decidido el usuario:
 |---|---|
 | 0001 (ADR) | Monolito dividido en módulos (`usuarios`, `recursos`, `reservas`) con capas controller/service/repository y un fichero por capa: `controller.py`, `dto.py`, `service.py`, `repository.py`, `entity.py`. Reglas: el controller no importa entidades; el repository no importa DTO; el servicio hace las conversiones (sin Mapper) y devuelve DTO |
 | 0002 | FastAPI + SQLAlchemy 2.0 síncrono + Pydantic v2. Sin SQLModel, porque mezcla DTO y entidad. Conexión entre capas con `Depends`. La sesión por petición no hace commit automático: los servicios que escriben hacen commit de forma explícita, antes de responder |
-| 0003 (ADR) | PostgreSQL instalado en local (sin Docker), configurado con `DATABASE_URL` en `.env`. Esquema con `create_all` desde un script que también carga datos de prueba. Sin migraciones; Alembic sería el camino si el proyecto creciera |
+| 0003 (ADR), sustituida por 0007 | PostgreSQL en Docker Compose (`docker compose up -d`), configurado con `DATABASE_URL` en `.env`. Esquema con `create_all` desde un script que también carga datos de prueba. Sin migraciones; Alembic sería el camino si el proyecto creciera |
 | 0004 | Enums como `StrEnum`, guardados como `VARCHAR` + `CHECK` generado desde el propio enum. Las invariantes de una sola fila también llevan `CHECK` con nombre. Las horas son `TIME` y una reserva por horas acaba como muy tarde a las 23:59 (Python no puede representar las 24:00) |
 | 0005 | Herencia de recursos en una sola tabla `recurso` con la columna discriminadora `tipo`. `MODALIDAD_RESERVA` e `IMAGEN` son constantes de clase, no columnas. Las imágenes son ficheros fijos del frontend; la API devuelve su nombre |
 | 0006 | Código en español para el dominio y en inglés para los nombres de las capas |
@@ -52,7 +52,8 @@ Se dejan para el plan de reservas, que es donde se usan: los errores del dominio
 ## Cambios por fichero
 
 **Infraestructura**
-- `src/backend/.env.example`: `DATABASE_URL=postgresql+psycopg://usuario:contraseña@localhost:5432/reservas`, con un comentario: desde el devcontainer, el host es `host.docker.internal`.
+- `src/backend/.env.example`: `DATABASE_URL=postgresql+psycopg://reservas:reservas@localhost:5432/reservas` (las credenciales de `docker-compose.yml`), con un comentario: desde el devcontainer, el host es `host.docker.internal`.
+- `docker-compose.yml` (decisión 0007): PostgreSQL 17, puerto publicado en `127.0.0.1:5432` y volumen con nombre.
 - `.gitignore`: añadir `.env`.
 - `src/backend/requirements.txt` con versiones mínimas:
   - `fastapi>=0.115`, `uvicorn[standard]`
@@ -63,10 +64,12 @@ Se dejan para el plan de reservas, que es donde se usan: los errores del dominio
 - `database.py`:
   - `engine`, `SessionLocal` y `Base(DeclarativeBase)`;
   - `get_session()`: abre la sesión y la cierra al acabar. Si quedó algo sin confirmar, se deshace; nunca hace commit;
+  - `tipo_enum(enum)`: tipo de columna `VARCHAR` que se lee como el enum (sin tipo nativo ni `CHECK` automático);
   - `check_enum(columna, enum, nombre)`: crea el `CheckConstraint` a partir de los valores del `StrEnum`;
-  - `recrear_esquema(engine)`: importa `app.entidades` y ejecuta `drop_all` + `create_all`.
+  - `es_local(url)`: si el host es local (`None`, `localhost`, `127.0.0.1`, `::1`, `host.docker.internal`);
+  - `recrear_esquema(engine)`: se niega (`RuntimeError`) si la base no es local; importa `app.entidades` y ejecuta `drop_all` + `create_all`.
 - `entidades.py` (tarea 3, cuando existen las entidades): importa las tres entidades para que todas queden registradas. Lo usan `main.py`, `seed.py` y `recrear_esquema`.
-- Columnas de enum: `mapped_column(String(<n>))` más su `check_enum`. Sin el `String` explícito, SQLAlchemy crearía un ENUM nativo de PostgreSQL, que la decisión 0004 descarta.
+- Columnas de enum: `mapped_column(tipo_enum(<Enum>))` más su `check_enum`. Sin `tipo_enum`, SQLAlchemy crearía un ENUM nativo de PostgreSQL, que la decisión 0004 descarta.
 - `common/enums.py`, con los valores copiados de `modelo_recursos.puml` (el valor de cada miembro es igual a su nombre):
   - `Rol`: TRABAJADOR, RESPONSABLE
   - `TipoRecurso`: SALA_REUNION, VEHICULO, EQUIPO
@@ -128,8 +131,8 @@ Se dejan para el plan de reservas, que es donde se usan: los errores del dominio
 
 **Datos de prueba**
 - `app/seed.py` (`python -m app.seed`):
-  - solo para la base local de `DATABASE_URL`, e imprime a qué base se conecta;
-  - `recrear_esquema(engine)`;
+  - imprime a qué base se conecta y llama a `recrear_esquema(engine)`, que solo actúa sobre una base local (si no, el seed termina con el mensaje);
+  - `cargar_datos(session)` añade los datos sin commit; `main()` hace el commit;
   - usuarios: Ana García (TRABAJADOR), Luis Pérez (TRABAJADOR), Marta López (RESPONSABLE) y Jordi Puig (RESPONSABLE);
   - recursos:
     - **salas:** "Sala Mar" (capacidad 10, aforo compartido, FLEXIBLE), "Sala Montaña" (capacidad 6, sin aforo compartido, MODERADA) y "Auditorio" (capacidad 50, aforo compartido, BLOQUEADA);
@@ -138,8 +141,8 @@ Se dejan para el plan de reservas, que es donde se usan: los errores del dominio
 - Las reservas aleatorias se generarán en el plan siguiente, a través del servicio, para que cumplan las reglas.
 
 **Documentación**
-- `README.md`: requisito de PostgreSQL, crear la base `reservas`, copiar `.env` y cargar los datos de prueba.
-- `docs/diagramas/modelo_bd.puml`: `creada_en` pasa a `TIMESTAMPTZ`.
+- `README.md`: cargar los datos de prueba (`python -m app.seed`). El requisito de Docker, `docker compose up -d` y la copia del `.env` ya están (decisión 0007).
+- `docs/diagramas/modelo_bd.puml`: `creada_en` pasa a `TIMESTAMPTZ` (hecho en la tarea 3).
 - `docs/reglas_negocio.md`, regla 2: "una reserva por horas acaba como muy tarde a las 23:59".
 
 ## Tareas (en orden)
@@ -148,15 +151,15 @@ Se dejan para el plan de reservas, que es donde se usan: los errores del dominio
 3. Las tres entidades, `entidades.py` y el script de datos de prueba. Comprobar en `psql` las tablas y los `CHECK`, y que `\dT` no lista tipos enum.
 4. Módulo usuarios y `GET /usuarios`.
 5. Módulo recursos y `GET /recursos`.
-6. README, `modelo_bd.puml` y la regla 2.
+6. README y la regla 2.
 
 ## Riesgos
-- **PostgreSQL en la máquina anfitriona:** desde el devcontainer se llega por `host.docker.internal:5432`. Tiene que estar arrancado y aceptar conexiones desde el contenedor.
+- **PostgreSQL en Docker Compose:** se arranca en local (no dentro del devcontainer) y desde el devcontainer se llega por `host.docker.internal:5432`.
 - **Versiones de Python distintas:** el sistema tiene la 3.11, el `.venv` es 3.13 y está fijada la 3.12. El código será compatible con 3.11 o superior.
 
 ## Verificación
 No hay tests en el repositorio. Las comprobaciones se hacen a mano o con scripts temporales fuera del repo:
-- `cd src/backend && cp .env.example .env` (con las credenciales locales) y `pip install -r requirements.txt`.
+- `docker compose up -d` (en la raíz), `cd src/backend && cp .env.example .env` y `pip install -r requirements.txt`.
 - `python -m app.seed`, y después `psql … -c '\d+ reserva'` para ver las columnas, los `CHECK` y los índices.
 - Intentar con `psql` los INSERT que deben fallar: una sala sin capacidad, horas invertidas, una reserva aprobada sin aprobador, un estado desconocido.
 - `uvicorn app.main:app --reload`, y después `GET /usuarios` y `GET /recursos` desde `/docs`. Swagger debe mostrar la respuesta según el `tipo`.

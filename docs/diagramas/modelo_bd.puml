@@ -39,7 +39,7 @@ entity reserva {
   hora_fin : TIME
   asistentes_sala : INTEGER
   * estado : VARCHAR
-  * creada_en : DATETIME
+  * creada_en : TIMESTAMPTZ
 }
 
 reserva }o-down-|| recurso : recurso_id
