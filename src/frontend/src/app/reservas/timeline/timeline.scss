@@ -1,0 +1,142 @@
+.timeline {
+  display: grid;
+  gap: var(--espacio-2);
+}
+
+.eje {
+  padding-bottom: 1.5rem;
+}
+
+.pista {
+  position: relative;
+  height: 3.5rem;
+  overflow: hidden;
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio-boton);
+  background: var(--color-aprobada-fondo);
+}
+
+.segmento,
+.bloque,
+.atenuado,
+.seleccion {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.segmento {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-aprobada);
+  // Más ocupación, más intensidad del ámbar
+  background: color-mix(
+    in srgb,
+    var(--color-pendiente-fondo) calc(var(--ocupacion) * 100%),
+    transparent
+  );
+
+  &.completo {
+    background: var(--color-ocupado-fondo);
+    color: var(--color-ocupado-texto);
+  }
+}
+
+.bloque {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding-inline: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &[data-estado='PENDIENTE'] {
+    background: repeating-linear-gradient(
+      45deg,
+      var(--color-pendiente-fondo),
+      var(--color-pendiente-fondo) 6px,
+      var(--color-pendiente-rayado) 6px,
+      var(--color-pendiente-rayado) 12px
+    );
+    color: var(--color-pendiente);
+  }
+
+  &[data-estado='APROBADA'] {
+    background: var(--color-aprobada-fondo);
+    color: var(--color-aprobada);
+    outline: 1px solid var(--color-aprobada);
+    outline-offset: -1px;
+  }
+}
+
+.atenuado {
+  left: 0;
+  background: #ffffffb3;
+  background-image: repeating-linear-gradient(
+    135deg,
+    #00000014,
+    #00000014 2px,
+    transparent 2px,
+    transparent 6px
+  );
+}
+
+.seleccion {
+  background: #006b9833;
+  border: 2px solid var(--color-marca-oscuro);
+}
+
+.marca {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #00000014;
+}
+
+.celdas {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(48, 1fr);
+}
+
+.celda {
+  cursor: pointer;
+
+  &:hover {
+    background: #006b9822;
+  }
+
+  &.pasada {
+    cursor: not-allowed;
+  }
+}
+
+.etiquetas {
+  position: relative;
+  height: 1.25rem;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--color-texto-suave);
+
+  span {
+    position: absolute;
+    transform: translateX(-50%);
+
+    &:first-child {
+      transform: none;
+    }
+
+    &:last-child {
+      transform: translateX(-100%);
+    }
+  }
+}

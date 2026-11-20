@@ -16,15 +16,90 @@
     <h3>Reservas del día</h3>
     <app-reservas-del-dia [reservas]="dat.reservas" />
   } @else {
-    <div class="todo-el-dia" [attr.data-libre]="dat.dia_completo_libre === false ? 'false' : 'true'">
-      <strong>Todo el día</strong>
-      @if (dat.dia_completo_libre === false) {
-        <span>Ocupado por:</span>
-        <app-reservas-del-dia [reservas]="dat.reservas" />
-      } @else {
-        <span>Libre</span>
+    @if (modalidades().length > 1) {
+      <fieldset class="modalidad">
+        <legend>Modalidad</legend>
+        @for (m of modalidades(); track m) {
+          <label>
+            <input
+              type="radio"
+              name="modalidad"
+              [value]="m"
+              [checked]="modalidad() === m"
+              (change)="elegirModalidad(m)"
+            />
+            {{ modalidadLabel[m] }}
+          </label>
+        }
+      </fieldset>
+    }
+
+    @switch (modalidad()) {
+      @case ('POR_HORAS') {
+        <div class="campos">
+          <label>
+            Desde
+            <input
+              #ini
+              aria-describedby="motivo-reserva"
+              type="time"
+              step="60"
+              [value]="desde()"
+              (input)="desde.set(ini.value)"
+            />
+          </label>
+          <label>
+            Hasta
+            <input
+              #fin
+              aria-describedby="motivo-reserva"
+              type="time"
+              step="60"
+              [max]="horaMaxima"
+              [value]="hasta()"
+              (input)="hasta.set(fin.value)"
+            />
+          </label>
+          @if (aforo()) {
+            <label>
+              Asistentes
+              <input
+                #asis
+                type="number"
+                min="1"
+                [attr.max]="capacidad()"
+                [value]="asistentes()"
+                (input)="leerAsistentes(asis)"
+              />
+            </label>
+          }
+        </div>
+        <p class="ayuda">También puedes escribir la hora.</p>
+        <app-timeline
+          [franjas]="dat.franjas"
+          [reservas]="dat.reservas"
+          [aforo]="aforo()"
+          [capacidad]="capacidad()"
+          [seleccion]="seleccion()"
+          [primerMinuto]="primerMinuto()"
+          (elegirCelda)="elegirCelda($event)"
+        />
       }
-    </div>
+      @case ('DIA_COMPLETO') {
+        <div
+          class="todo-el-dia"
+          [attr.data-libre]="dat.dia_completo_libre === false ? 'false' : 'true'"
+        >
+          <strong>Todo el día</strong>
+          @if (dat.dia_completo_libre === false) {
+            <span>Ocupado por:</span>
+            <app-reservas-del-dia [reservas]="dat.reservas" />
+          } @else {
+            <span>Libre</span>
+          }
+        </div>
+      }
+    }
 
     @if (motivo(); as texto) {
       <p id="motivo-reserva" class="motivo" role="status">{{ texto }}</p>

@@ -1,0 +1,62 @@
+<div class="timeline">
+  <div class="eje" aria-hidden="true">
+    <div class="pista">
+      @if (aforo()) {
+        @for (s of segmentos(); track s.izquierda) {
+          <div
+            class="segmento"
+            [class.completo]="!s.franja.libre"
+            [style.left.%]="s.izquierda"
+            [style.width.%]="s.ancho"
+            [style.--ocupacion]="s.ocupacion"
+            [attr.title]="textoSegmento(s)"
+          >
+            @if (s.ancho > 9) {
+              {{ s.franja.capacidad_libre }}
+              {{ s.franja.capacidad_libre === 1 ? 'libre' : 'libres' }}
+            }
+          </div>
+        }
+      } @else {
+        @for (b of bloques(); track b.reserva.id) {
+          <div
+            class="bloque"
+            [attr.data-estado]="b.reserva.estado"
+            [attr.title]="textoBloque(b)"
+            [style.left.%]="b.izquierda"
+            [style.width.%]="b.ancho"
+          >
+            @if (b.ancho > 12) {
+              {{ nombreCompleto(b.reserva.titular) }}
+            }
+          </div>
+        }
+      }
+
+      @if (pasado() > 0) {
+        <div class="atenuado" [style.width.%]="pasado()"></div>
+      }
+      @if (marcaSeleccion(); as m) {
+        <div class="seleccion" [style.left.%]="m.izquierda" [style.width.%]="m.ancho"></div>
+      }
+
+      @for (h of horas; track h) {
+        <span class="marca" [style.left.%]="porcentaje(h * 60)"></span>
+      }
+
+      <div class="celdas">
+        @for (c of celdas; track c.inicio) {
+          <div class="celda" [class.pasada]="celdaPasada(c)" (click)="elegirCelda.emit(c)"></div>
+        }
+      </div>
+    </div>
+
+    <div class="etiquetas">
+      @for (e of etiquetas; track e) {
+        <span [style.left.%]="porcentaje(e * 60)">{{ aHora(e * 60) }}</span>
+      }
+    </div>
+  </div>
+
+  <app-reservas-del-dia [reservas]="reservas()" />
+</div>

@@ -208,3 +208,32 @@ export function motivoNoReservable(e: EntradaMotivo): string | null {
   }
   return null;
 }
+
+/**
+ * Efecto de pulsar una celda de 30 minutos del timeline. Sin selección, la celda; con selección,
+ * la unión de las dos si toda ella está libre; si no, la celda sola si está libre; si tampoco, `null`.
+ * El `fin` se recorta a `FIN_DIA`, para que la API nunca reciba «24:00».
+ */
+export function ajustarSeleccion(
+  actual: Seleccion | null,
+  celda: Seleccion,
+  franjas: Franja[],
+  asistentes: number | null,
+  primerMinutoElegible: number,
+): Seleccion | null {
+  const sola: Seleccion = { inicio: celda.inicio, fin: Math.min(celda.fin, FIN_DIA) };
+  const valida = (tramo: Seleccion) =>
+    tramo.inicio >= primerMinutoElegible && tramoLibre(franjas, tramo, asistentes);
+
+  if (actual && actual.fin > actual.inicio) {
+    const dentro = sola.inicio >= actual.inicio && sola.fin <= actual.fin;
+    const union: Seleccion = {
+      inicio: Math.min(actual.inicio, sola.inicio),
+      fin: Math.max(actual.fin, sola.fin),
+    };
+    if (!dentro && valida(union)) {
+      return union;
+    }
+  }
+  return valida(sola) ? sola : null;
+}
