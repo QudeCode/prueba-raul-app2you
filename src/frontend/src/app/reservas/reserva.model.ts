@@ -236,6 +236,23 @@ function franjaCabe(franja: Franja, asistentes: number | null): boolean {
   );
 }
 
+/**
+ * Máximo de asistentes que caben en toda la selección: la menor capacidad libre de los tramos que
+ * cubre (regla 6). `null` si no hay aforo o la selección no es un tramo válido.
+ */
+export function plazasLibres(franjas: Franja[] | null, seleccion: Seleccion | null): number | null {
+  if (!franjas || seleccion === null || seleccion.fin <= seleccion.inicio) {
+    return null;
+  }
+  const capacidades = tramosQueCubre(franjas, seleccion.inicio, seleccion.fin).map(
+    (f) => f.capacidad_libre,
+  );
+  if (capacidades.length === 0 || capacidades.some((c) => c === null)) {
+    return null;
+  }
+  return Math.max(0, Math.min(...(capacidades as number[])));
+}
+
 function tramoLibre(franjas: Franja[], tramo: Seleccion, asistentes: number | null): boolean {
   const cubiertas = tramosQueCubre(franjas, tramo.inicio, tramo.fin);
   return cubiertas.length > 0 && cubiertas.every((f) => franjaCabe(f, asistentes));

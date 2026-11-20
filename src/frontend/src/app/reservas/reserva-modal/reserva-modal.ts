@@ -19,6 +19,7 @@ import {
   modalidadesDe,
   motivoNoReservable,
   pendientesQueEstorban,
+  plazasLibres,
   primerMinuto,
   ReservaNueva,
   Seleccion,
@@ -87,6 +88,11 @@ export class ReservaModal {
   );
 
   protected readonly primerMinuto = computed(() => primerMinuto(this.fecha(), this.ahora()));
+
+  /** Con aforo, cuántas personas caben aún en la franja elegida, según lo que puede reservar el usuario. */
+  protected readonly plazas = computed(() =>
+    this.aforo() ? plazasLibres(this.vista()?.franjas ?? null, this.seleccion()) : null,
+  );
 
   protected readonly motivo = computed(() =>
     motivoNoReservable({

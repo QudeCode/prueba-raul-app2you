@@ -67,13 +67,25 @@
                 #asis
                 type="number"
                 min="1"
-                [attr.max]="capacidad()"
+                aria-describedby="plazas-franja"
+                [attr.max]="plazas() ?? capacidad()"
                 [value]="asistentes()"
                 (input)="leerAsistentes(asis)"
               />
             </label>
           }
         </div>
+        @if (aforo()) {
+          <p id="plazas-franja" class="plazas" aria-live="polite">
+            @if (plazas(); as n) {
+              Máximo en esta franja: {{ n }} {{ n === 1 ? 'persona' : 'personas' }}.
+            } @else if (plazas() === 0) {
+              No quedan plazas en esta franja.
+            } @else {
+              Máximo: {{ capacidad() }} personas.
+            }
+          </p>
+        }
         <p class="ayuda">También puedes escribir la hora.</p>
         <app-timeline
           [franjas]="dat.franjas"
