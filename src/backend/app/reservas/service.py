@@ -277,7 +277,7 @@ class ReservaService:
 
     def aprobar(self, reserva_id: int, usuario: UsuarioRespuesta) -> ReservaRespuesta:
         """Reglas 9, 10, 12 y 21: no vuelve a comprobar conflictos, la pendiente ya bloqueaba su franja."""
-        reserva = self._para_actualizar(reserva_id)
+        reserva = self._obtener(reserva_id, para_actualizar=True)
         self._exigir_pendiente_y_responsable(reserva, usuario, "aprobar")
         if comenzada(inicio_de(reserva.fecha, reserva.hora_inicio), self.reloj()):
             raise Conflicto("No se puede aprobar una reserva que ya ha comenzado")
@@ -287,14 +287,14 @@ class ReservaService:
 
     def rechazar(self, reserva_id: int, usuario: UsuarioRespuesta) -> ReservaRespuesta:
         """Reglas 9 y 11."""
-        reserva = self._para_actualizar(reserva_id)
+        reserva = self._obtener(reserva_id, para_actualizar=True)
         self._exigir_pendiente_y_responsable(reserva, usuario, "rechazar")
         reserva.estado = EstadoReserva.RECHAZADA
         return self._confirmar(reserva.id)
 
     def cancelar(self, reserva_id: int, usuario: UsuarioRespuesta) -> ReservaRespuesta:
         """Reglas 13 a 16."""
-        reserva = self._para_actualizar(reserva_id)
+        reserva = self._obtener(reserva_id, para_actualizar=True)
         self._exigir_titular(reserva, usuario, "cancelar")
         self._exigir_activa(reserva, "cancelar")
         politica = reserva.recurso.politica_cancelacion
@@ -307,7 +307,7 @@ class ReservaService:
         self, reserva_id: int, nuevo_titular_id: int, usuario: UsuarioRespuesta
     ) -> ReservaRespuesta:
         """Reglas 13 a 15 y 17 a 19: solo cambia el titular; el estado se mantiene."""
-        reserva = self._para_actualizar(reserva_id)
+        reserva = self._obtener(reserva_id, para_actualizar=True)
         self.usuarios.obtener(nuevo_titular_id)
         self._exigir_titular(reserva, usuario, "transferir")
         if nuevo_titular_id == reserva.titular_id:
@@ -319,6 +319,13 @@ class ReservaService:
             raise Conflicto(MOTIVO_SIN_TRANSFERIR[politica])
         reserva.titular_id = nuevo_titular_id
         return self._confirmar(reserva.id)
+
+    def obtener(self, reserva_id: int, usuario: UsuarioRespuesta) -> ReservaRespuesta:
+        """El titular o un responsable; las activas ya son públicas en la disponibilidad (decisión 0015)."""
+        reserva = self._obtener(reserva_id)
+        if reserva.titular_id != usuario.id and usuario.rol != Rol.RESPONSABLE:
+            raise NoPermitido("Solo el titular o un responsable pueden ver la reserva")
+        return reserva_a_respuesta(reserva, self.reloj())
 
     def mias(self, usuario: UsuarioRespuesta) -> list[ReservaRespuesta]:
         ahora = self.reloj()
@@ -359,8 +366,12 @@ class ReservaService:
 
         return franja_de(hora_inicio, hora_fin)
 
-    def _para_actualizar(self, reserva_id: int) -> Reserva:
-        reserva = self.repositorio.obtener_para_actualizar(reserva_id)
+    def _obtener(self, reserva_id: int, para_actualizar: bool = False) -> Reserva:
+        """La reserva o 404; bloqueada hasta el commit si se va a modificar (decisión 0013)."""
+        if para_actualizar:
+            reserva = self.repositorio.obtener_para_actualizar(reserva_id)
+        else:
+            reserva = self.repositorio.obtener(reserva_id)
         if reserva is None:
             raise NoEncontrado(f"No existe la reserva {reserva_id}")
         return reserva

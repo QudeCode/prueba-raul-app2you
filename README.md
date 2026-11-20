@@ -69,7 +69,7 @@ npm start
 - **Usuario actual:** no hay login. Se elige en el selector de la cabecera: Ana y Luis son trabajadores (sus reservas quedan pendientes) y Marta y Jordi, responsables (las suyas quedan aprobadas y pueden aprobar o rechazar las pendientes).
 - **Reservar:** desde una tarjeta de `/recursos` se abre el detalle del recurso con su calendario. En salas y equipos por horas, al elegir un día se abre un modal con el timeline del día; en vehículos (y equipos por día completo), se reserva el día entero.
 - **Reservas:** las propias y, para un responsable, las pendientes de aprobar, en pestañas «Activas», «Pasadas» y, para un responsable, «Por aprobar». Cancelar y transferir solo aparecen cuando la política del recurso lo permite.
-- **API:** en http://localhost:8000/docs. Los endpoints de reservas piden la cabecera `X-Usuario-Id` con el id del usuario (1 Ana, 2 Luis, 3 Marta, 4 Jordi).
+- **API:** en http://localhost:8000/docs. Los principales: `GET /recursos` (y `/recursos/{id}`), `GET /recursos/{id}/disponibilidad?fecha=` y `…/disponibilidad/mes?anio=&mes=`, que son públicos, y `/reservas` (crear, `GET /reservas/{id}`, `mias`, `pendientes` y las acciones `aprobar`, `rechazar`, `cancelar` y `transferir`). Los de reservas piden la cabecera `X-Usuario-Id` con el id del usuario (1 Ana, 2 Luis, 3 Marta, 4 Jordi).
 
 ## Estructura
 

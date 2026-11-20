@@ -1,6 +1,6 @@
 # 0012 · API de reservas y errores del dominio
 
-Estado: aceptada
+Estado: aceptada · la ruta de la disponibilidad, sustituida por 0015
 Tipo: decisión
 
 ## Contexto

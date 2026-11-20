@@ -32,7 +32,7 @@ export class ReservasService {
       const dia = fecha();
       return id === null || dia === null
         ? undefined
-        : { url: `${API_URL}/disponibilidad`, params: { recurso_id: id, fecha: dia } };
+        : { url: `${API_URL}/recursos/${id}/disponibilidad`, params: { fecha: dia } };
     });
   }
 
@@ -44,8 +44,8 @@ export class ReservasService {
       }
       const [anio, numero] = mes().split('-').map(Number);
       return {
-        url: `${API_URL}/disponibilidad/mes`,
-        params: { recurso_id: id, anio, mes: numero },
+        url: `${API_URL}/recursos/${id}/disponibilidad/mes`,
+        params: { anio, mes: numero },
       };
     });
   }

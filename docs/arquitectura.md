@@ -35,8 +35,8 @@ Cada módulo es una funcionalidad con sus capas dentro (una carpeta por módulo,
 |---|---|---|---|
 | **common** | Lo que comparten todos los módulos | URL de la API y mensajes de error, enums, fechas, reloj y el diálogo modal | Enums, horas en minutos y errores del dominio |
 | **usuarios** | Saber quién es el usuario actual, sin login (decisión [0011](decisiones/0011-usuario-actual-sin-login.md)) | El selector de la cabecera y el usuario elegido | `GET /usuarios` y la dependencia que lee `X-Usuario-Id` |
-| **recursos** | El catálogo de salas, vehículos y equipos | El listado con filtro por tipo y la tarjeta de recurso | `GET /recursos` |
-| **reservas** | Disponibilidad, creación y gestión de reservas (decisiones [0012](decisiones/0012-api-de-reservas-y-errores.md) y [0013](decisiones/0013-disponibilidad-por-tramos.md)) | El detalle del recurso con calendario y modal de reserva, y la página «Reservas» con sus pestañas | `/disponibilidad` y `/reservas`: consultar, crear, aprobar, rechazar, cancelar y transferir |
+| **recursos** | El catálogo de salas, vehículos y equipos | El listado con filtro por tipo y la tarjeta de recurso | `GET /recursos` y `GET /recursos/{id}` |
+| **reservas** | Disponibilidad, creación y gestión de reservas (decisiones [0012](decisiones/0012-api-de-reservas-y-errores.md), [0013](decisiones/0013-disponibilidad-por-tramos.md) y [0015](decisiones/0015-rutas-rest-de-recursos-y-reservas.md)) | El detalle del recurso con calendario y modal de reserva, y la página «Reservas» con sus pestañas | `/recursos/{id}/disponibilidad` y `/reservas`: consultar, crear, ver una reserva, aprobar, rechazar, cancelar y transferir |
 
 `App` (la cabecera con la navegación y el selector de usuario) y `main.py` (la aplicación, el CORS y el manejador de errores) son el punto de entrada de cada parte, no un módulo.
 

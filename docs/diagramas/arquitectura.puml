@@ -172,11 +172,11 @@ package "BACKEND · FastAPI" as BE {
 ' COMUNICACION ENTRE FRONTEND Y BACKEND
 ' =====================================================
 
-RecursosService --> RecursosController : HTTP GET /recursos
+RecursosService --> RecursosController : HTTP GET /recursos\nGET /recursos/{id}
 
 UsuariosService --> UsuariosController : HTTP GET /usuarios
 
-ReservasService --> ReservasController : HTTP /reservas\n/disponibilidad\n(X-Usuario-Id)
+ReservasService --> ReservasController : HTTP /reservas\n/recursos/{id}/disponibilidad\n(X-Usuario-Id)
 
 ' =====================================================
 ' BASE DE DATOS

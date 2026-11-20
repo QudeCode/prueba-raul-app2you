@@ -15,3 +15,10 @@ def listar(
     tipo: TipoRecurso | None = None,
 ) -> list[RecursoRespuesta]:
     return service.listar(tipo)
+
+
+@router.get("/{recurso_id}")
+def obtener(
+    service: Annotated[RecursoService, Depends(get_recurso_service)], recurso_id: int
+) -> RecursoRespuesta:
+    return service.obtener(recurso_id)

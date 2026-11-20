@@ -19,7 +19,10 @@ from app.reservas.service import (
 from app.usuarios.controller import UsuarioActual
 
 router = APIRouter(prefix="/reservas", tags=["reservas"])
-router_disponibilidad = APIRouter(prefix="/disponibilidad", tags=["disponibilidad"])
+# La URL cuelga del recurso, pero el código vive en reservas: recursos no depende de reservas (decisión 0015)
+router_disponibilidad = APIRouter(
+    prefix="/recursos/{recurso_id}/disponibilidad", tags=["disponibilidad"]
+)
 
 Reservas = Annotated[ReservaService, Depends(get_reserva_service)]
 Disponibilidad = Annotated[DisponibilidadService, Depends(get_disponibilidad_service)]
@@ -48,6 +51,12 @@ def mias(service: Reservas, usuario: UsuarioActual) -> list[ReservaRespuesta]:
 @router.get("/pendientes")
 def pendientes(service: Reservas, usuario: UsuarioActual) -> list[ReservaRespuesta]:
     return service.pendientes(usuario)
+
+
+# Después de /mias y /pendientes: FastAPI prueba las rutas en orden
+@router.get("/{reserva_id}")
+def obtener(service: Reservas, usuario: UsuarioActual, reserva_id: int) -> ReservaRespuesta:
+    return service.obtener(reserva_id, usuario)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
