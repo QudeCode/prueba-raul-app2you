@@ -1,10 +1,6 @@
 @let r = recurso();
-<article class="tarjeta" [attr.data-tipo]="r.tipo">
-  <!-- alt vacío: el tipo ya aparece como texto en la etiqueta -->
-  <img class="imagen" [src]="'/imagenes/recursos/' + r.imagen" alt="" width="96" height="96" />
-
-  <span class="tipo">{{ tipoLabel[r.tipo] }}</span>
-  <h2>{{ r.nombre }}</h2>
+<article class="tarjeta" [class.enlazada]="enlazar()" [attr.data-tipo]="r.tipo">
+  <app-recurso-cabecera [recurso]="r" [enlace]="enlazar() ? '/recursos/' + r.id : null" />
   <p class="descripcion">{{ r.descripcion }}</p>
 
   <dl class="datos">

@@ -15,9 +15,10 @@ Cada funcionalidad tiene su carpeta con todo lo suyo (`app/recursos/`, más adel
 
 ```
 src/app/
-├── common/          enums del dominio con sus etiquetas, URL de la API
-├── recursos/        página, componentes, servicio de datos y modelo
-└── reservas/        (futuro) igual que recursos
+├── common/          enums del dominio con sus etiquetas, URL de la API, fechas y el diálogo compartido (dialogo/)
+├── usuarios/        servicio y modelo del usuario actual, y su selector
+├── recursos/        página, componentes (recurso-card, recurso-cabecera), servicio de datos y modelo
+└── reservas/        páginas de detalle del recurso y de reservas (las propias y, para un responsable, las pendientes de aprobar), sus componentes, servicio y modelo
 ```
 
 ### Dos capas de llamadas y un modelo compartido
@@ -37,8 +38,8 @@ En el backend la cadena sigue: controller → service → repository → base de
 Reglas:
 - Ninguna capa llama a otra saltándose la intermedia: un componente presentacional nunca inyecta servicios ni hace peticiones, y una página nunca usa `HttpClient`, sino el servicio de su funcionalidad.
 - El modelo no depende de nada: ni de Angular ni de las capas que lo usan.
-- La lógica de negocio que replique el frontend (por ejemplo, si una reserva se puede cancelar según su política) va en funciones puras del modelo, no en los componentes. El backend sigue siendo la autoridad: la interfaz solo evita ofrecer acciones que la API rechazaría.
-- Entre funcionalidades, las dependencias van en una sola dirección, la misma que en el backend: `reservas` puede usar el modelo de `recursos`, nunca al revés. Todas pueden usar `common`.
+- La lógica de negocio que replique el frontend (por ejemplo, si un día se puede reservar según la modalidad) va en funciones puras del modelo, no en los componentes. El backend sigue siendo la autoridad: la interfaz solo evita ofrecer acciones que la API rechazaría. Lo que la API ya calcula, como si una reserva se puede cancelar o transferir (decisión 0013), no se replica.
+- Entre funcionalidades, las dependencias van en una sola dirección, la misma que en el backend: `reservas` puede usar el modelo, los servicios y los componentes presentacionales de `recursos` y `usuarios`, nunca al revés. `App` puede usar `usuarios` (el selector del usuario actual, decisión 0011). Todas pueden usar `common`.
 - Lo que comparte más de una funcionalidad sube a `common/`. Los enums del dominio y sus etiquetas viven en `common/enums.ts`, como `app/common/enums.py` en el backend.
 
 ### Datos y estado

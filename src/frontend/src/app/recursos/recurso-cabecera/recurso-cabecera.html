@@ -1,0 +1,14 @@
+@let r = recurso();
+<div class="cabecera" [attr.data-tipo]="r.tipo">
+  <!-- alt vacío: el tipo ya aparece como texto en la etiqueta -->
+  <img class="imagen" [src]="'/imagenes/recursos/' + r.imagen" alt="" width="96" height="96" />
+  <span class="tipo">{{ tipoLabel[r.tipo] }}</span>
+  @if (enlace(); as ruta) {
+    <h2 class="nombre">
+      <a [routerLink]="ruta" [queryParams]="parametros()">{{ r.nombre }}</a>
+    </h2>
+  } @else {
+    <!-- Sin enlace, el nombre ya es el encabezado de la página: aquí no se repite como encabezado -->
+    <p class="nombre">{{ r.nombre }}</p>
+  }
+</div>

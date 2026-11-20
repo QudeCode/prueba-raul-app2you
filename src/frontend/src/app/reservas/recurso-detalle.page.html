@@ -1,0 +1,42 @@
+<a class="volver" routerLink="/recursos">← Recursos</a>
+
+@if (recursos.error()) {
+  <div class="aviso" role="alert">
+    <p>No se pudo cargar el recurso. Comprueba que el backend está arrancado.</p>
+    <button type="button" (click)="recursos.reload()" [disabled]="recursos.isLoading()">
+      {{ recursos.isLoading() ? 'Reintentando…' : 'Reintentar' }}
+    </button>
+  </div>
+} @else if (!recursos.hasValue()) {
+  <p class="estado" role="status">Cargando recurso…</p>
+} @else if (recurso(); as r) {
+  <span class="etiqueta-seccion">Disponibilidad</span>
+  <h1>{{ r.nombre }}</h1>
+
+  <div class="columnas">
+    <app-recurso-card [recurso]="r" [enlazar]="false" />
+
+    <section class="calendario" aria-labelledby="titulo-calendario">
+      <h2 id="titulo-calendario">Elige un día</h2>
+      @if (mesReservas.error()) {
+        <div class="aviso" role="alert">
+          <p>No se pudo cargar la ocupación del mes.</p>
+          <button type="button" (click)="mesReservas.reload()" [disabled]="mesReservas.isLoading()">
+            {{ mesReservas.isLoading() ? 'Reintentando…' : 'Reintentar' }}
+          </button>
+        </div>
+      }
+      <app-calendario
+        [mes]="mesActivo()"
+        [conteos]="conteos()"
+        [seleccionada]="fechaActiva()"
+        [marcarLibre]="marcarLibre()"
+        [primerDiaElegible]="primerDia()"
+        (elegir)="elegirDia($event)"
+        (cambiarMes)="cambiarMes($event)"
+      />
+    </section>
+  </div>
+} @else {
+  <p class="estado" role="status">No existe el recurso.</p>
+}

@@ -1,0 +1,53 @@
+<div class="calendario" [class.compacto]="compacto()">
+  <div class="mes">
+    <button
+      type="button"
+      class="boton-secundario"
+      aria-label="Mes anterior"
+      (click)="cambiarMes.emit(anterior())"
+    >
+      ‹
+    </button>
+    <h3 aria-live="polite">{{ titulo() }}</h3>
+    <button
+      type="button"
+      class="boton-secundario"
+      aria-label="Mes siguiente"
+      (click)="cambiarMes.emit(siguiente())"
+    >
+      ›
+    </button>
+  </div>
+
+  <div class="rejilla">
+    <div class="fila cabecera" aria-hidden="true">
+      @for (d of cabeceraDias; track $index) {
+        <span>{{ d }}</span>
+      }
+    </div>
+    @for (semana of semanas(); track $index) {
+      <div class="fila">
+        @for (dia of semana; track $index) {
+          @if (dia) {
+            <button
+              type="button"
+              class="dia"
+              [class.pasado]="pasado(dia)"
+              [class.ocupado]="conteo(dia) > 0"
+              [attr.data-libre]="marcarLibre() ? conteo(dia) === 0 : null"
+              [attr.aria-current]="dia === seleccionada() ? 'date' : null"
+              [attr.aria-label]="etiqueta(dia)"
+              [disabled]="desactivado(dia)"
+              (click)="elegir.emit(dia)"
+            >
+              <span class="numero">{{ numero(dia) }}</span>
+              <span class="resumen">{{ resumen(dia) }}</span>
+            </button>
+          } @else {
+            <span></span>
+          }
+        }
+      </div>
+    }
+  </div>
+</div>
