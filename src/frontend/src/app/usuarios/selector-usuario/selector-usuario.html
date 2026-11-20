@@ -1,0 +1,11 @@
+<label class="selector">
+  <span>Usuario</span>
+  <select #sel (change)="cambiar.emit(+sel.value)">
+    @for (u of usuarios(); track u.id) {
+      <option [value]="u.id" [selected]="u.id === actualId()">
+        {{ nombreCompleto(u) }} · {{ rolLabel[u.rol] }}
+      </option>
+    }
+  </select>
+</label>
+<div class="oculto" role="status">{{ anuncio() }}</div>

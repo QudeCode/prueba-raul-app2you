@@ -16,6 +16,9 @@ class UsuarioRepository:
         consulta = select(Usuario).order_by(Usuario.apellidos, Usuario.nombre, Usuario.id)
         return list(self.session.scalars(consulta))
 
+    def obtener(self, usuario_id: int) -> Usuario | None:
+        return self.session.get(Usuario, usuario_id)
+
 
 def get_usuario_repository(session: Annotated[Session, Depends(get_session)]) -> UsuarioRepository:
     return UsuarioRepository(session)

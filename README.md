@@ -64,6 +64,10 @@ npm start
 
 > Con el backend arrancado, abre el listado de recursos (`/recursos`), con filtro por tipo. Las imágenes de cada tipo están en `src/frontend/public/imagenes/recursos/`.
 
+## Uso
+
+- **Usuario actual:** no hay login. Se elige en el selector de la cabecera: Ana y Luis son trabajadores (sus reservas quedan pendientes) y Marta y Jordi, responsables (las suyas quedan aprobadas y pueden aprobar o rechazar las pendientes).
+
 ## Estructura
 
 ```

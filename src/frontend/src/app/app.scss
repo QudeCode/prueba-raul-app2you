@@ -13,9 +13,44 @@
     background: linear-gradient(to right, var(--color-marca-oscuro), var(--color-marca));
   }
 
-  .contenedor {
-    padding-block: var(--espacio-3);
+  .barra {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--espacio-2) var(--espacio-3);
+    padding-block: var(--espacio-2);
   }
+}
+
+.navegacion {
+  display: flex;
+  gap: var(--espacio-1);
+  margin-right: auto;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0 var(--espacio-2);
+    border-bottom: 3px solid transparent;
+    color: var(--color-texto);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--color-marca-oscuro);
+    }
+
+    &.activo {
+      border-bottom-color: var(--color-marca-oscuro);
+      color: var(--color-marca-oscuro);
+    }
+  }
+}
+
+.aviso-usuarios {
+  color: var(--color-error);
+  font-weight: 600;
 }
 
 .marca {
