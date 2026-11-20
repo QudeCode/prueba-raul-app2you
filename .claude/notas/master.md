@@ -1,45 +1,27 @@
-# master · Reservas (siguiente funcionalidad)
+# master · Correcciones de la revisión
 
-Rama: master · Plan en curso: [reservas](../plans/reservas.md) (aprobado) · Planes cerrados: [backend-bd-estructura](../plans/backend-bd-estructura.md), [frontend-recursos](../plans/frontend-recursos.md)
+Rama: master · Planes cerrados: [backend-bd-estructura](../plans/backend-bd-estructura.md), [frontend-recursos](../plans/frontend-recursos.md), [reservas](../plans/reservas.md)
 
 ## Objetivo
-Implementar las reservas de punta a punta (backend y frontend): crear, aprobar, rechazar, cancelar, transferir y consultar la disponibilidad. El punto de partida es [docs/diagramas/arquitectura.puml](../../docs/diagramas/arquitectura.puml), donde lo previsto aparece como `«pendiente»`.
+Repasar la aplicación contra el enunciado y corregir lo que se interpretó de otra forma (apartado «Pendiente»).
 
 ## Hecho
-- **Backend** (plan `backend-bd-estructura`, cerrado con `dev:revisar-cambios` completo):
-  - capas controller → service → repository (0001);
-  - PostgreSQL en Docker Compose (0007, sustituye a la 0003);
-  - entidades `Usuario`, `Recurso` (tabla única) y `Reserva`, con `CHECK` con nombre (incluido `hora_fin <= 23:59`);
-  - seed con 4 usuarios y 8 recursos, sin reservas;
-  - `GET /usuarios` y `GET /recursos?tipo=`.
-- **Frontend** (plan `frontend-recursos`, cerrado con `dev:revisar-cambios` y UX):
-  - listado `/recursos` con tarjetas;
-  - filtro por tipo en la URL, con «Todos» por defecto (punto 1 del enunciado) y recuentos; el catálogo se pide una vez y se filtra en el cliente;
-  - estilos tomados de app2u, con contraste AA;
-  - modo estricto (`strict` y `strictTemplates`).
-- **Decisiones del frontend:**
-  - 0008: funcionalidades con capas ligeras, una cadena de llamadas en la que cada capa solo llama a la siguiente y un modelo compartido en `common/`;
-  - 0009: estado en la URL y filtrado en el cliente;
-  - 0010: SCSS con variables CSS y la referencia visual de app2u.
-- **Diagrama de arquitectura** con lo implementado y lo pendiente, enlazado desde el README.
+- **Backend** (plan `backend-bd-estructura`): capas controller → service → repository (0001), PostgreSQL en Docker Compose (0007), entidades `Usuario`, `Recurso` (tabla única) y `Reserva` con `CHECK` con nombre, `GET /usuarios` y `GET /recursos?tipo=`.
+- **Frontend** (plan `frontend-recursos`): listado `/recursos` con filtro por tipo en la URL, decisiones 0008 a 0010 y modo estricto.
+- **Reservas de punta a punta** (plan `reservas`): disponibilidad por día y por mes, crear, aprobar, rechazar, cancelar y transferir (decisiones 0011 a 0013); detalle del recurso con calendario y modal con timeline, y página «Reservas» con sus pestañas. Verificado con scripts temporales fuera del repo, `npm run build` y prueba del usuario en local.
+- **Datos de prueba** con reservas aleatorias creadas con las mismas reglas que la API.
+- **Documentación de arquitectura:** `docs/arquitectura.md` con los diagramas reducido y detallado, enlazada desde el README.
 
 ## Pendiente
-- **Reservas implementadas** (plan `reservas`, tareas D1, B1–B5, F1–F5 y D2):
-  - Backend verificado en el contenedor con scripts temporales (fuera del repo): seed, 9 rutas, códigos 400, 401, 403, 404, 409 y 422, aforo en el pico, preflight CORS, dos `crear` simultáneos (201 y 409) y cancelar con aprobar a la vez sin escrituras perdidas, bordes de plazos y `tramos`.
-  - Frontend: `npm run build` sin errores (copia en el scratchpad). Lo hizo `dev:implementador`, con desviaciones menores del plan: `ReservasDelDia`, `textoHoras`, inputs extra y `Dialogo` que también cierra con clic en el fondo.
-  - Dos rondas de `dev:revisar-cambios` en nivel completo con UI, sin bloqueos y con los hallazgos aplicados. Diferidos a propósito: `esActiva` replica los estados activos (se resolvería con un campo `activa` en la API), `ReservaModal` recibe el `httpResource`, el reloj inyectable sin uso, el CORS solo con `GET` y `POST`, y las celdas del timeline solo con ratón.
-  - Falta: la prueba en el navegador local (Definición de hecho, bloque «En local»), reiniciando `npm start` por las carpetas nuevas y volviendo a ejecutar `python -m app.seed`.
-- **Diferido de las revisiones:**
-  - el color por tipo en un solo sitio (las reglas `[data-tipo]` ya están en `styles.scss`);
-  - un título de pestaña por ruta;
-  - `length=None`, que sobra en `tipo_enum`;
-  - el `dict` sin tipar de `recursos/service.py`.
+- Correcciones de la revisión del enunciado:
+  - regla 8: un responsable puede reservar aunque el recurso tenga reservas pendientes (punto 4 del enunciado);
+  - no aprobar reservas pendientes que ya han empezado;
+  - rutas REST: `GET /recursos/{id}`, `GET /reservas/{id}` y la disponibilidad bajo `/recursos/{id}`;
+  - decisión sobre la interpretación de las políticas de cancelación.
+- **Diferido de las revisiones:** el color por tipo en un solo sitio, un título de pestaña por ruta, `length=None` en `tipo_enum`, el `dict` sin tipar de `recursos/service.py`, `esActiva` que replica los estados activos, el CORS solo con `GET` y `POST` y las celdas del timeline solo con ratón.
 
 ## Siguiente paso
-Prueba del usuario en local (bloque «En local» de la Definición de hecho) y commit.
-
-## Sin commit
-- Todo el trabajo de reservas: backend, frontend, decisiones 0011 a 0013, documentación, contextos de los agentes, el plan y esta nota.
+Plan de las correcciones de la revisión.
 
 ## Pantallas acordadas
 - **Detalle del recurso:** desde la tarjeta de `/recursos`, con un calendario mensual en el centro (recuento de reservas por día, días pasados atenuados).

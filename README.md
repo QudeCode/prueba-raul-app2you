@@ -2,7 +2,7 @@
 
 Sistema de reservas de recursos empresariales (ver [enunciado](docs/enunciado.md)).
 
-Las reglas de negocio acordadas están en [docs/reglas_negocio.md](docs/reglas_negocio.md), la arquitectura por capas en [docs/diagramas/arquitectura.puml](docs/diagramas/arquitectura.puml) y las decisiones técnicas en [docs/decisiones/](docs/decisiones/README.md).
+Las reglas de negocio acordadas están en [docs/reglas_negocio.md](docs/reglas_negocio.md), la arquitectura por capas en [docs/arquitectura.md](docs/arquitectura.md) (con los diagramas [reducido](docs/diagramas/arquitectura_capas.puml) y [detallado](docs/diagramas/arquitectura.puml)) y las decisiones técnicas en [docs/decisiones/](docs/decisiones/README.md).
 
 | Capa     | Tecnología       | Carpeta         |
 |----------|------------------|-----------------|
@@ -79,8 +79,17 @@ npm start
 │   ├── frontend/        # Angular
 │   └── backend/         # FastAPI
 ├── docs/                # documentación del proyecto
-└── .claude/             # material de trabajo del asistente de desarrollo
+└── .claude/             # contexto y planes del desarrollo asistido con IA
 ```
 
 - **`docs/`** es para cualquier lector: el enunciado, las reglas de negocio acordadas, los apuntes con las decisiones de negocio, los diagramas de clases y de base de datos, y las decisiones técnicas con su porqué.
-- **`.claude/`** es el material de trabajo de Claude Code, el asistente usado durante el desarrollo: el contexto que necesita cada agente, los planes de implementación y las notas para retomar el trabajo entre sesiones. No hace falta leerlo para entender el proyecto.
+- **`.claude/`** contiene el material del desarrollo asistido con IA (ver el apartado siguiente).
+
+## Uso de IA
+
+El proyecto se ha desarrollado con [Claude Code](https://claude.com/claude-code) como asistente. El análisis del enunciado, las reglas de negocio y las decisiones son míos; la IA ha ayudado a redactar planes, implementar y revisar, y cada cambio ha pasado por mi aprobación antes del commit.
+
+- **`CLAUDE.md`**: las directrices del proyecto para el asistente (comandos, reglas, idioma, documentación y commits).
+- **`.claude/context/`**: el contexto de cada agente (planificación, implementación, verificación y revisión de código, de planes y de UX).
+- **`.claude/plans/`**: los planes de implementación aprobados, con sus decisiones y tareas.
+- **`.claude/notas/`**: el estado del trabajo para retomarlo entre sesiones.

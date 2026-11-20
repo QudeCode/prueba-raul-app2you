@@ -1,0 +1,112 @@
+
+@startuml arquitectura_capas
+
+title Arquitectura por capas - Reserva de Recursos
+
+' =====================================================
+' CONFIGURACION GENERAL
+' =====================================================
+
+left to right direction
+
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 75
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam defaultTextAlignment center
+skinparam defaultFontSize 12
+skinparam ArrowFontSize 10
+skinparam ArrowColor #546E7A
+skinparam ArrowThickness 1
+
+skinparam package {
+    BorderColor #78909C
+    FontStyle bold
+}
+
+skinparam component {
+    BorderColor #90A4AE
+    BackgroundColor #FFFFFF
+}
+
+' =====================================================
+' FRONTEND
+' =====================================================
+
+package "FRONTEND · Angular" as FE {
+
+    [Presentación\n(páginas y componentes)] as FP #E3F2FD
+
+    [Datos\n(servicios)] as FD #BBDEFB
+
+    [Modelo del frontend\n(tipos y reglas)] as FM #FFF8E1
+
+    ' Distribucion interna
+    FP -[hidden]right-> FD
+    FD -[hidden]down-> FM
+}
+
+' =====================================================
+' BACKEND
+' =====================================================
+
+package "BACKEND · FastAPI" as BE {
+
+    [Controller\n(rutas HTTP y traducción\nde errores)] as BC #E8F5E9
+
+    [Service\n(reglas de negocio;\nlanza errores de dominio)] as BS #C8E6C9
+
+    [Repository\n(consultas y persistencia)] as BR #A5D6A7
+
+    [Modelo del backend\n(DTO, entidades y errores)] as BM #FFF8E1
+
+    ' Distribucion interna
+    BC -[hidden]right-> BS
+    BS -[hidden]right-> BR
+    BS -[hidden]down-> BM
+}
+
+' =====================================================
+' BASE DE DATOS
+' =====================================================
+
+database "PostgreSQL\n(Docker Compose)" as BD #ECEFF1
+
+' =====================================================
+' FLUJO PRINCIPAL
+' =====================================================
+
+FP --> FD : peticiones UI
+
+FD --> BC : HTTP / JSON\nX-Usuario-Id
+
+BC --> BS : DTO + usuario actual
+
+BS --> BR : consultas / persistencia
+
+BR --> BD : SQL
+
+' =====================================================
+' MODELOS Y DEPENDENCIAS
+' =====================================================
+
+FP ..> FM : utiliza tipos
+
+FD ..> FM : tipa respuestas
+
+BC ..> BM : DTO
+
+BS ..> BM : entidades / errores
+
+BR ..> BM : entidades
+
+' =====================================================
+' POSICIONAMIENTO GENERAL
+' =====================================================
+
+FE -[hidden]right-> BE
+BE -[hidden]right-> BD
+
+@enduml
