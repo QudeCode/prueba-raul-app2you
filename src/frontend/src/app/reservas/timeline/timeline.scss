@@ -115,8 +115,12 @@
     background: #006b9822;
   }
 
-  &.pasada {
+  &.no-disponible {
     cursor: not-allowed;
+
+    &:hover {
+      background: none;
+    }
   }
 }
 

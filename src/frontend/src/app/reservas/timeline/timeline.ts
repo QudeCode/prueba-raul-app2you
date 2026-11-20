@@ -10,6 +10,7 @@ import {
   rangoMinutos,
   Reserva,
   Seleccion,
+  seSolapa,
   textoHoras,
 } from '../reserva.model';
 
@@ -93,6 +94,13 @@ export class Timeline {
 
   protected celdaPasada(celda: Seleccion): boolean {
     return celda.inicio < this.primerMinuto();
+  }
+
+  /** Alguna franja de la celda no admite más reservas (en la vista del usuario actual). */
+  protected celdaOcupada(celda: Seleccion): boolean {
+    return (this.franjas() ?? []).some(
+      (f) => !f.libre && seSolapa(aMinutos(f.inicio), aMinutos(f.fin), celda.inicio, celda.fin),
+    );
   }
 
   protected textoSegmento(s: Segmento): string {

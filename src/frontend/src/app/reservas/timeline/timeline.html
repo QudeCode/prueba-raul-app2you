@@ -46,7 +46,11 @@
 
       <div class="celdas">
         @for (c of celdas; track c.inicio) {
-          <div class="celda" [class.pasada]="celdaPasada(c)" (click)="elegirCelda.emit(c)"></div>
+          <div
+            class="celda"
+            [class.no-disponible]="celdaPasada(c) || celdaOcupada(c)"
+            (click)="elegirCelda.emit(c)"
+          ></div>
         }
       </div>
     </div>
