@@ -103,12 +103,12 @@ Se dejan para el plan de reservas, que es donde se usan: los errores del dominio
     - `ck_recurso_capacidad`: `capacidad_maxima IS NULL OR capacidad_maxima > 0`;
     - `ck_recurso_plazas`: `plazas IS NULL OR plazas > 0`;
     - `uq_recurso_matricula` y `uq_recurso_numero_serie`: únicos.
-- `repository.py`: `listar()`, ordenado por nombre e id.
+- `repository.py`: `listar()`, ordenado por nombre e id (polimórfico); proveedor `get_recurso_repository`.
 - `dto.py`:
-  - **Campos comunes:** `id`, `nombre`, `descripcion`, `politica_cancelacion`, `imagen` y `modalidad_reserva`.
-  - **Una respuesta por tipo:** `SalaReunionRespuesta` (añade `capacidad_maxima` y `aforo_compartido`), `VehiculoRespuesta` (`matricula` y `plazas`) y `EquipoRespuesta` (`numero_serie`). Cada una lleva `tipo: Literal[...]`.
+  - **Campos comunes:** `id`, `nombre`, `descripcion`, `politica_cancelacion`, `imagen` y `modalidad_reserva`, en `RecursoComun` (no se expone sola; `json_schema_serialization_defaults_required=True` para que `tipo` salga obligatorio en el esquema).
+  - **Una respuesta por tipo:** `SalaReunionRespuesta` (añade `capacidad_maxima` y `aforo_compartido`), `VehiculoRespuesta` (`matricula` y `plazas`) y `EquipoRespuesta` (`numero_serie`). Cada una lleva `tipo: Literal[...]` con su valor por defecto, así que el servicio no lo pasa.
   - **`RecursoRespuesta`:** `Annotated[SalaReunionRespuesta | VehiculoRespuesta | EquipoRespuesta, Field(discriminator="tipo")]`.
-- `service.py`: `_a_respuesta(recurso)` elige el DTO según el tipo y lo construye de forma explícita, con `imagen` y `modalidad_reserva` sacados de las constantes de la clase.
+- `service.py`: `_a_respuesta(recurso)` elige el DTO con `match` por subclase y lo construye de forma explícita, con `imagen` y `modalidad_reserva` sacados de las constantes de la clase (no `from_attributes`: obligaría a alias con nombres de la entidad en el DTO); proveedor `get_recurso_service`.
 - `controller.py`: `GET /recursos`, que devuelve `list[RecursoRespuesta]`.
 
 **Módulo `reservas/`** (en este plan solo la tabla)
