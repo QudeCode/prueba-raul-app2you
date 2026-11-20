@@ -35,6 +35,8 @@ export interface Franja {
   /** Contando solo las aprobadas: lo que puede reservar un responsable (regla 8). */
   libre_sin_pendientes: boolean;
   capacidad_libre_sin_pendientes: number | null;
+  /** Ids de las reservas activas que ocupan la franja, pendientes incluidas (regla 20). */
+  ocupada_por: number[];
 }
 
 export interface Disponibilidad {
@@ -196,9 +198,9 @@ export interface EntradaEstorban {
 }
 
 /**
- * Pendientes que un responsable rechazaría al confirmar (regla 8). Sin aforo, las que se solapan,
- * que son exactamente las que rechaza el backend; con aforo, las candidatas: el backend rechaza
- * solo las necesarias y la lista exacta llega en la respuesta.
+ * Pendientes que un responsable rechazaría al confirmar (regla 8): las que ocupan las franjas de la
+ * selección, según el backend. Sin aforo son exactamente las que rechaza; con aforo, las
+ * candidatas: el backend rechaza solo las necesarias y la lista exacta llega en la respuesta.
  */
 export function pendientesQueEstorban(e: EntradaEstorban): Reserva[] {
   const pendientes = e.disponibilidad.reservas.filter((r) => r.estado === 'PENDIENTE');
@@ -214,7 +216,10 @@ export function pendientesQueEstorban(e: EntradaEstorban): Reserva[] {
   if (tramoLibre(franjas, seleccion, asistentes)) {
     return [];
   }
-  return pendientes.filter((r) => seSolapa(...rangoMinutos(r), seleccion.inicio, seleccion.fin));
+  const ocupantes = new Set(
+    tramosQueCubre(franjas, seleccion.inicio, seleccion.fin).flatMap((f) => f.ocupada_por),
+  );
+  return pendientes.filter((r) => ocupantes.has(r.id));
 }
 
 /** «Se han rechazado 2 reservas pendientes:», encabezado de la lista de rechazadas. */

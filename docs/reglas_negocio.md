@@ -60,6 +60,7 @@
 20. Para un recurso y una fecha se devuelve:
    - Las reservas activas de ese día, con su estado (explican por qué no está disponible).
    - Por horas: las franjas libres dentro del día, de 00:00 a 23:59 (la hora de fin máxima, regla 2).
+   - Para cada franja, las reservas activas que la ocupan: si no está libre, son las que la bloquean.
    - Día completo: si está disponible o no.
    - Con aforo compartido: la capacidad libre en cada franja.
    - Para cada franja y para el día completo, también si está libre sin contar las pendientes: lo que puede reservar un responsable (regla 8).

@@ -88,6 +88,9 @@ export class Timeline {
       : null;
   });
 
+  /** Las reservas que el backend dice que ocupan cada franja, por id. */
+  private readonly porId = computed(() => new Map(this.reservas().map((r) => [r.id, r])));
+
   protected porcentaje(minutos: number): number {
     return (minutos / MINUTOS_DIA) * 100;
   }
@@ -105,7 +108,12 @@ export class Timeline {
 
   protected textoSegmento(s: Segmento): string {
     const libres = s.franja.capacidad_libre;
-    return `${s.franja.inicio}–${s.franja.fin}: ${libres} ${libres === 1 ? 'libre' : 'libres'}`;
+    const texto = `${s.franja.inicio}–${s.franja.fin}: ${libres} ${libres === 1 ? 'libre' : 'libres'}`;
+    const ocupantes = s.franja.ocupada_por
+      .map((id) => this.porId().get(id))
+      .filter((r) => r !== undefined)
+      .map((r) => `${nombreCompleto(r.titular)} (${r.asistentes_sala})`);
+    return ocupantes.length ? `${texto} · Ocupada por ${ocupantes.join(', ')}` : texto;
   }
 
   protected textoBloque(b: Bloque): string {

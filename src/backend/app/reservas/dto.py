@@ -54,6 +54,9 @@ class FranjaRespuesta(BaseModel):
     # Contando solo las aprobadas: lo que puede reservar un responsable (regla 8)
     libre_sin_pendientes: bool
     capacidad_libre_sin_pendientes: int | None
+    # Ids de las reservas activas que ocupan la franja, pendientes incluidas: explican por qué
+    # no está libre (regla 20). Con aforo, una franja libre también puede tener ocupantes
+    ocupada_por: list[int]
 
 
 class DisponibilidadRespuesta(BaseModel):

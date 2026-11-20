@@ -46,6 +46,7 @@ def solapa(inicio_a: time, fin_a: time, inicio_b: time, fin_b: time) -> bool:
 class Ocupacion(NamedTuple):
     """Lo que ocupa una reserva activa en el día."""
 
+    reserva_id: int
     inicio: time
     fin: time
     carga: int
@@ -53,19 +54,21 @@ class Ocupacion(NamedTuple):
 
 
 class Tramo(NamedTuple):
-    """Un tramo del día con su ocupación, con y sin las reservas pendientes."""
+    """Un tramo del día con su ocupación, con y sin las reservas pendientes, y quién lo ocupa."""
 
     desde: time
     hasta: time
     carga: int
     carga_sin_pendientes: int
+    ocupada_por: tuple[int, ...]
 
 
 def tramos(ocupaciones: list[Ocupacion]) -> list[Tramo]:
     """Parte [00:00, 23:59) por los inicios y fines de las ocupaciones y suma la de cada tramo.
 
-    Los tramos vecinos con las dos cargas iguales se fusionan. Responde a la regla 20 y valida
-    las reglas 5, 6 y 8 con la misma partición (decisiones 0013 y 0016).
+    Los tramos vecinos con los mismos ocupantes se fusionan, así que cada reserva de
+    `ocupada_por` cubre el tramo entero. Responde a la regla 20 y valida las reglas 5,
+    6 y 8 con la misma partición (decisiones 0013, 0016 y 0017).
     """
     cortes = sorted({INICIO_DIA, FIN_DIA} | {t for o in ocupaciones for t in (o.inicio, o.fin)})
     resultado: list[Tramo] = []
@@ -73,11 +76,13 @@ def tramos(ocupaciones: list[Ocupacion]) -> list[Tramo]:
         cubren = [o for o in ocupaciones if solapa(o.inicio, o.fin, desde, hasta)]
         carga = sum(o.carga for o in cubren)
         sin_pendientes = sum(o.carga for o in cubren if not o.pendiente)
+        ids = tuple(o.reserva_id for o in cubren)
         anterior = resultado[-1] if resultado else None
-        if anterior and (anterior.carga, anterior.carga_sin_pendientes) == (carga, sin_pendientes):
+        # Los mismos ocupantes dan las mismas cargas
+        if anterior and anterior.ocupada_por == ids:
             resultado[-1] = anterior._replace(hasta=hasta)
         else:
-            resultado.append(Tramo(desde, hasta, carga, sin_pendientes))
+            resultado.append(Tramo(desde, hasta, carga, sin_pendientes, ids))
     return resultado
 
 
@@ -132,6 +137,7 @@ def ocupacion(reserva: Reserva, aforo: bool) -> int:
 def ocupaciones(reservas: list[Reserva], aforo: bool) -> list[Ocupacion]:
     return [
         Ocupacion(
+            r.id,
             *franja_de(r.hora_inicio, r.hora_fin),
             ocupacion(r, aforo),
             r.estado == EstadoReserva.PENDIENTE,
@@ -325,6 +331,7 @@ class DisponibilidadService:
                 capacidad_libre=libres,
                 libre_sin_pendientes=libres_sin_pendientes > 0,
                 capacidad_libre_sin_pendientes=libres_sin_pendientes,
+                ocupada_por=list(tramo.ocupada_por),
             )
         return FranjaRespuesta(
             inicio=tramo.desde,
@@ -333,6 +340,7 @@ class DisponibilidadService:
             capacidad_libre=None,
             libre_sin_pendientes=tramo.carga_sin_pendientes == 0,
             capacidad_libre_sin_pendientes=None,
+            ocupada_por=list(tramo.ocupada_por),
         )
 
 
