@@ -8,59 +8,54 @@ skinparam componentStyle rectangle
 skinparam packageStyle rectangle
 top to bottom direction
 
-skinparam component<<pendiente>> {
-  BackgroundColor #F5F5F5
-  BorderColor #9E9E9E
-  FontColor #757575
-  StereotypeFontColor #9E9E9E
-}
-
 package "FRONTEND · Angular" {
   package "Presentación" as FP #E3F2FD {
     [App (cabecera)] as App
+    [SelectorUsuario] as SelectorUsuario
     [RecursosPage] as RecursosPage
-    [RecursoCard] as RecursoCard
-    [SelectorUsuario] <<pendiente>> as SelectorUsuario
-    [DisponibilidadPage] <<pendiente>> as DisponibilidadPage
-    [MisReservasPage] <<pendiente>> as MisReservasPage
-    [AprobacionesPage] <<pendiente>> as AprobacionesPage
+    [RecursoCard / RecursoCabecera] as RecursoCard
+    [RecursoDetallePage] as RecursoDetallePage
+    [ReservasPage] as ReservasPage
+    [componentes de reservas\n(Calendario, NavegacionDia, Timeline, ReservasDelDia,\nReservaModal, ReservaCard, AccionDialogo)] as ComponentesReservas
+    [common/dialogo] as Dialogo
   }
   package "Datos" as FD #BBDEFB {
     [RecursosService] as RecursosService
-    [UsuariosService] <<pendiente>> as UsuariosService
-    [ReservasService] <<pendiente>> as ReservasService
+    [UsuariosService] as UsuariosService
+    [ReservasService] as ReservasService
   }
   package "Modelo del frontend" as FM #FFF8E1 {
     [recurso.model] as RecursoModel
-    [common/enums] as EnumsFront
-    [reserva.model] <<pendiente>> as ReservaModel
-    [reglas de reserva] <<pendiente>> as ReglasFront
+    [usuario.model] as UsuarioModel
+    [reserva.model (tipos y reglas)] as ReservaModel
+    [common/enums, common/fechas] as ComunFront
   }
 }
 
 package "BACKEND · FastAPI" {
   package "Controller" as BC #E8F5E9 {
+    [manejador de errores (main)] as Manejador
     [usuarios/controller] as UsuariosController
     [recursos/controller] as RecursosController
-    [reservas/controller] <<pendiente>> as ReservasController
-    [usuario actual (X-Usuario-Id)] <<pendiente>> as UsuarioActual
+    [reservas/controller] as ReservasController
+    [usuario actual (X-Usuario-Id)] as UsuarioActual
   }
   package "Service" as BS #C8E6C9 {
     [UsuarioService] as UsuarioService
     [RecursoService] as RecursoService
-    [ReservaService] <<pendiente>> as ReservaService
-    [DisponibilidadService] <<pendiente>> as DisponibilidadService
+    [ReservaService] as ReservaService
+    [DisponibilidadService] as DisponibilidadService
   }
   package "Repository" as BR #A5D6A7 {
     [UsuarioRepository] as UsuarioRepository
     [RecursoRepository] as RecursoRepository
-    [ReservaRepository] <<pendiente>> as ReservaRepository
+    [ReservaRepository] as ReservaRepository
   }
   package "Modelo del backend" as BM #FFF8E1 {
     [DTO (usuarios, recursos, reservas)] as DTO
     [Entity (Usuario, Recurso, Reserva)] as Entity
-    [common/enums] as EnumsBack
-    [errores del dominio] <<pendiente>> as Errores
+    [common/enums, common/horas] as ComunBack
+    [errores del dominio] as Errores
   }
 }
 
@@ -71,16 +66,21 @@ database "PostgreSQL · Docker Compose" as BD #ECEFF1 {
 }
 
 App -down-> RecursosPage : router
-App -down-> DisponibilidadPage : router
-App -down-> MisReservasPage : router
-App -down-> AprobacionesPage : router
-App -right-> SelectorUsuario
+App -down-> RecursoDetallePage : router
+App -down-> ReservasPage : router
+App -right-> SelectorUsuario : input
+App -down-> UsuariosService : inject
 RecursosPage -right-> RecursoCard : input
 RecursosPage -down-> RecursosService : inject
-SelectorUsuario -down-> UsuariosService : inject
-DisponibilidadPage -down-> ReservasService : inject
-MisReservasPage -down-> ReservasService : inject
-AprobacionesPage -down-> ReservasService : inject
+RecursoDetallePage -right-> RecursoCard : input
+RecursoDetallePage -right-> ComponentesReservas : input
+ReservasPage -right-> ComponentesReservas : input
+ComponentesReservas -right-> Dialogo : input
+RecursoDetallePage -down-> RecursosService : inject
+RecursoDetallePage -down-> ReservasService : inject
+ReservasPage -down-> ReservasService : inject
+ReservasPage -down-> UsuariosService : inject
+ReservasService -right-> UsuariosService : inject
 
 RecursosService -down-> RecursosController : HTTP GET /recursos
 UsuariosService -down-> UsuariosController : HTTP GET /usuarios
@@ -91,11 +91,15 @@ RecursosController -down-> RecursoService : Depends
 ReservasController -down-> ReservaService : Depends
 ReservasController -down-> DisponibilidadService : Depends
 ReservasController -right-> UsuarioActual : Depends
+UsuarioActual -down-> UsuarioService : Depends
 UsuarioService -down-> UsuarioRepository : Depends
 RecursoService -down-> RecursoRepository : Depends
 ReservaService -down-> ReservaRepository : Depends
 DisponibilidadService -down-> ReservaRepository : Depends
+ReservaService -right-> DisponibilidadService : llama
 ReservaService -left-> RecursoService : llama
+ReservaService -left-> UsuarioService : llama
+DisponibilidadService -left-> RecursoService : llama
 UsuarioRepository -down-> BD : SQL
 RecursoRepository -down-> BD : SQL
 ReservaRepository -down-> BD : SQL
@@ -103,6 +107,7 @@ ReservaRepository -down-> BD : SQL
 FP .right.> FM : usa
 FD .right.> FM : usa
 
+Manejador .right.> Errores : traduce a HTTP
 BC .right.> DTO : usa
 BS .right.> DTO : usa
 BS .right.> Entity : usa

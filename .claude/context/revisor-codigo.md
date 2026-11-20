@@ -18,3 +18,6 @@ Sin autenticación (prueba técnica). El usuario actual llega por la cabecera `X
 - Los ficheros nuevos sin seguimiento no salen en `git diff`: si el `--stat` no incluye carpetas nuevas del plan, léelas directamente.
 - `src/frontend/public/` se copia entero al build: nada que no deba publicarse (zip, material con licencia restrictiva) puede quedarse ahí.
 - No pedir tests: el proyecto no los lleva, a propósito.
+- Un enlace con `::after` que cubre la tarjeta (`RecursoCabecera` con `enlace`) tapa lo que haya dentro: los botones de la tarjeta necesitan `position: relative; z-index: 1`.
+- Un componente que el implementador crea fuera del plan tiene que acabar en la tabla de Cambios del plan, no solo en el diagrama o en la nota.
+- Las reglas que existen en backend y frontend (aforo, 23:59, estados activos) se escriben una vez por lado, como función exportada del modelo; en el frontend, nunca repetidas en componentes.
