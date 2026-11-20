@@ -2,7 +2,7 @@
 // repite para no ofrecer lo que la API rechazaría. El backend es la autoridad. Sin Angular: el
 // «ahora» entra siempre como parámetro.
 import { EstadoReserva, ModalidadReserva } from '../common/enums';
-import { claveDia, dos } from '../common/fechas';
+import { claveDia, dos, formatoDiaCorto, formatoRango, sumarDias } from '../common/fechas';
 import { Recurso } from '../recursos/recurso.model';
 import { Usuario } from '../usuarios/usuario.model';
 
@@ -11,7 +11,9 @@ export interface Reserva {
   recurso: Recurso;
   titular: Usuario;
   aprobada_por: Usuario | null;
+  /** Primer día; `fecha_fin` es el último (igual si es de un día, regla 1). */
   fecha: string;
+  fecha_fin: string;
   hora_inicio: string | null;
   hora_fin: string | null;
   asistentes_sala: number | null;
@@ -42,8 +44,10 @@ export interface Franja {
 export interface Disponibilidad {
   recurso_id: number;
   fecha: string;
+  /** Último día consultado: igual a `fecha` salvo al consultar un rango de día completo. */
+  fecha_fin: string;
   reservas: Reserva[];
-  /** `null` si el recurso no admite reservas por horas. */
+  /** `null` si el recurso no admite reservas por horas o se consulta un rango. */
   franjas: Franja[] | null;
   /** `null` si el recurso no admite día completo. */
   dia_completo_libre: boolean | null;
@@ -58,6 +62,8 @@ export interface DiaOcupado {
 export interface ReservaNueva {
   recurso_id: number;
   fecha: string;
+  /** Último día de una reserva de día completo; `null` si es de un día. */
+  fecha_fin: string | null;
   hora_inicio: string | null;
   hora_fin: string | null;
   asistentes_sala: number | null;
@@ -70,6 +76,14 @@ export type Pestana = 'activas' | 'pasadas' | 'por-aprobar';
 export interface Seleccion {
   inicio: number;
   fin: number;
+}
+
+/** Días seguidos que puede abarcar una reserva de día completo (regla 1). */
+export const MAX_DIAS = 7;
+
+/** Los días que pueden ser el último de una reserva de día completo que empieza en `fecha`. */
+export function ultimosDiasPosibles(fecha: string): string[] {
+  return Array.from({ length: MAX_DIAS }, (_, i) => sumarDias(fecha, i));
 }
 
 /** Último minuto reservable (23:59, regla 2). */
@@ -100,6 +114,25 @@ export function textoHoras(reserva: Reserva): string {
     : 'Todo el día';
 }
 
+/**
+ * Lo que ocupa una reserva, en corto: «09:00–10:30», «Todo el día» o «3 dic–5 dic». Con `conDia`
+ * (al listar las de varios días), también el día de las de un día: «4 dic · 09:00–10:30».
+ */
+export function textoOcupacion(reserva: Reserva, conDia = false): string {
+  if (reserva.fecha !== reserva.fecha_fin) {
+    return `${formatoDiaCorto(reserva.fecha)}–${formatoDiaCorto(reserva.fecha_fin)}`;
+  }
+  return conDia
+    ? `${formatoDiaCorto(reserva.fecha)} · ${textoHoras(reserva)}`
+    : textoHoras(reserva);
+}
+
+/** Los días de una reserva para una frase: «el jueves, 3 de diciembre de 2026» o «del … al …». */
+export function fechasDe(reserva: Reserva): string {
+  const texto = formatoRango(reserva.fecha, reserva.fecha_fin, true);
+  return reserva.fecha === reserva.fecha_fin ? `el ${texto}` : texto;
+}
+
 export function modalidadesDe(recurso: Recurso): Modalidad[] {
   switch (recurso.modalidad_reserva) {
     case 'POR_HORAS':
@@ -127,9 +160,9 @@ export function esActiva(reserva: Reserva): boolean {
   return reserva.estado === 'PENDIENTE' || reserva.estado === 'APROBADA';
 }
 
-/** Una reserva de hoy sigue en «activas» todo el día. */
+/** Una reserva sigue en «activas» hasta que acaba su último día. */
 export function pestanaDe(reserva: Reserva, hoy: string): 'activas' | 'pasadas' {
-  return esActiva(reserva) && reserva.fecha >= hoy ? 'activas' : 'pasadas';
+  return esActiva(reserva) && reserva.fecha_fin >= hoy ? 'activas' : 'pasadas';
 }
 
 /** Regla 3 con el inicio a las 00:00 en día completo: hoy ya no se puede reservar. */
@@ -267,6 +300,8 @@ export interface EntradaMotivo {
   recurso: Recurso;
   modalidad: Modalidad | null;
   fecha: string;
+  /** Último día de una reserva de día completo de varios días; `null` si es de uno. */
+  fechaFin: string | null;
   seleccion: Seleccion | null;
   asistentes: number | null;
   disponibilidad: Disponibilidad | null;
@@ -284,10 +319,13 @@ export function motivoNoReservable(e: EntradaMotivo): string | null {
       : 'Un día completo no se puede reservar para hoy.';
   }
   if (e.disponibilidad === null) {
-    return 'Esperando la disponibilidad del día.';
+    return 'Esperando la disponibilidad.';
   }
   if (e.modalidad === 'DIA_COMPLETO') {
-    return e.disponibilidad.dia_completo_libre === false ? 'El día ya está ocupado.' : null;
+    if (e.disponibilidad.dia_completo_libre !== false) {
+      return null;
+    }
+    return e.fechaFin ? 'Algún día del rango ya está ocupado.' : 'El día ya está ocupado.';
   }
   const { seleccion, recurso } = e;
   if (seleccion === null) {

@@ -104,12 +104,18 @@ def cargar_datos(session: Session) -> None:
 def peticion_aleatoria(
     aleatorio: random.Random, recurso: RecursoRespuesta, fecha: date
 ) -> ReservaPeticion:
-    """Por horas: inicio en punto o y media entre las 08:00 y las 18:00, de 1 a 3 h."""
+    """Por horas: inicio en punto o y media entre las 08:00 y las 18:00, de 1 a 3 h.
+
+    Día completo: una de cada tres abarca de 2 a 4 días seguidos (regla 1).
+    """
     modalidad = recurso.modalidad_reserva
     if modalidad == ModalidadReserva.AMBAS:
         modalidad = aleatorio.choice([ModalidadReserva.POR_HORAS, ModalidadReserva.DIA_COMPLETO])
     if modalidad == ModalidadReserva.DIA_COMPLETO:
-        return ReservaPeticion(recurso_id=recurso.id, fecha=fecha)
+        dias_extra = aleatorio.randint(1, 3) if aleatorio.random() < 1 / 3 else 0
+        return ReservaPeticion(
+            recurso_id=recurso.id, fecha=fecha, fecha_fin=fecha + timedelta(days=dias_extra)
+        )
 
     inicio = 8 * 60 + 30 * aleatorio.randint(0, 20)
     fin = inicio + 60 * aleatorio.randint(1, 3)
@@ -158,14 +164,15 @@ def generar_reservas(session: Session, aleatorio: random.Random) -> Counter[Esta
                 for rechazada in reserva.rechazadas:
                     creadas[rechazada.id] = rechazada
 
-    # Aprueba alrededor de la mitad de las pendientes y rechaza una de cada cinco
+    # De cada diez pendientes, aprueba cinco, rechaza dos y deja tres para «Por aprobar»; por
+    # posición y no al azar, para que siempre queden pendientes
     pendientes = [r for r in creadas.values() if r.estado == EstadoReserva.PENDIENTE]
+    aleatorio.shuffle(pendientes)
     for indice, reserva in enumerate(pendientes):
         responsable = responsables[indice % len(responsables)]
-        sorteo = aleatorio.random()
-        if sorteo < 0.5:
+        if indice % 10 < 5:
             creadas[reserva.id] = reservas.aprobar(reserva.id, responsable)
-        elif sorteo < 0.7:
+        elif indice % 10 < 7:
             creadas[reserva.id] = reservas.rechazar(reserva.id, responsable)
 
     # Cancela dos y transfiere una entre las que su política aún lo permite; si no hay, se omite
@@ -186,7 +193,7 @@ def generar_reservas(session: Session, aleatorio: random.Random) -> Counter[Esta
 def insertar_reservas_pasadas(
     session: Session, recursos: list[RecursoRespuesta], usuarios: list[UsuarioRespuesta], hoy: date
 ) -> None:
-    """Unas pocas reservas de los días anteriores, para que «Pasadas» tenga contenido.
+    """Unas pocas reservas de un día de los días anteriores, para que «Pasadas» tenga contenido.
 
     Se insertan sin el servicio, que las rechazaría (regla 3), pero cumplen las demás: una por
     día, así no se solapan, y de trabajadores, porque un responsable no tiene reservas
@@ -204,6 +211,7 @@ def insertar_reservas_pasadas(
                 titular_id=trabajadores[indice % len(trabajadores)].id,
                 aprobada_por_id=responsable.id if aprobada else None,
                 fecha=hoy - timedelta(days=indice + 1),
+                fecha_fin=hoy - timedelta(days=indice + 1),
                 hora_inicio=time(10, 0) if por_horas else None,
                 hora_fin=time(11, 0) if por_horas else None,
                 asistentes_sala=2 if capacidad_compartida(recurso) is not None else None,

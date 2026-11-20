@@ -2,7 +2,7 @@ from datetime import date
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import Select, func, select
+from sqlalchemy import ColumnElement, Select, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.common.enums import EstadoReserva
@@ -23,14 +23,19 @@ def _con_relaciones(consulta: Select[tuple[Reserva]]) -> Select[tuple[Reserva]]:
     )
 
 
-def _consulta_activas_del_dia(recurso_id: int, fecha: date) -> Select[tuple[Reserva]]:
+def _activas_entre(desde: date, hasta: date) -> tuple[ColumnElement[bool], ...]:
+    """Las activas que ocupan algún día de [desde, hasta]: sus rangos de fechas se solapan."""
+    return (
+        Reserva.fecha <= hasta,
+        Reserva.fecha_fin >= desde,
+        Reserva.estado.in_(ESTADOS_ACTIVOS),
+    )
+
+
+def _consulta_activas_entre(recurso_id: int, desde: date, hasta: date) -> Select[tuple[Reserva]]:
     return _con_relaciones(
         select(Reserva)
-        .where(
-            Reserva.recurso_id == recurso_id,
-            Reserva.fecha == fecha,
-            Reserva.estado.in_(ESTADOS_ACTIVOS),
-        )
+        .where(Reserva.recurso_id == recurso_id, *_activas_entre(desde, hasta))
         .order_by(*ORDEN)
     )
 
@@ -53,30 +58,26 @@ class ReservaRepository:
         )
         return self.session.scalars(consulta).first()
 
-    def activas_del_dia(self, recurso_id: int, fecha: date) -> list[Reserva]:
-        return list(self.session.scalars(_consulta_activas_del_dia(recurso_id, fecha)))
+    def activas_entre(self, recurso_id: int, desde: date, hasta: date) -> list[Reserva]:
+        return list(self.session.scalars(_consulta_activas_entre(recurso_id, desde, hasta)))
 
-    def activas_del_dia_para_actualizar(self, recurso_id: int, fecha: date) -> list[Reserva]:
+    def activas_entre_para_actualizar(
+        self, recurso_id: int, desde: date, hasta: date
+    ) -> list[Reserva]:
         """Bloquea las filas hasta el commit: nadie aprueba una pendiente que se va a rechazar (decisión 0016)."""
         consulta = (
-            _consulta_activas_del_dia(recurso_id, fecha)
+            _consulta_activas_entre(recurso_id, desde, hasta)
             .with_for_update(of=Reserva)
             .execution_options(populate_existing=True)
         )
         return list(self.session.scalars(consulta))
 
-    def activas_por_dia(self, recurso_id: int, desde: date, hasta: date) -> list[tuple[date, int]]:
-        consulta = (
-            select(Reserva.fecha, func.count())
-            .where(
-                Reserva.recurso_id == recurso_id,
-                Reserva.fecha.between(desde, hasta),
-                Reserva.estado.in_(ESTADOS_ACTIVOS),
-            )
-            .group_by(Reserva.fecha)
-            .order_by(Reserva.fecha)
+    def rangos_activos(self, recurso_id: int, desde: date, hasta: date) -> list[tuple[date, date]]:
+        """Primer y último día de cada activa que ocupa algún día de [desde, hasta]."""
+        consulta = select(Reserva.fecha, Reserva.fecha_fin).where(
+            Reserva.recurso_id == recurso_id, *_activas_entre(desde, hasta)
         )
-        return [(fecha, total) for fecha, total in self.session.execute(consulta)]
+        return [(fecha, fecha_fin) for fecha, fecha_fin in self.session.execute(consulta)]
 
     def de_titular(self, usuario_id: int) -> list[Reserva]:
         consulta = _con_relaciones(

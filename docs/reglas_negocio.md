@@ -2,9 +2,9 @@
 
 ## Conceptos
 - **Reserva activa**: reserva en estado `PENDIENTE` o `APROBADA`. Solo las activas ocupan el recurso; `RECHAZADA` y `CANCELADA` lo liberan.
-- **Franja de una reserva**: por horas, de `hora_inicio` a `hora_fin` (como muy tarde las 23:59); día completo, de 00:00 a 24:00 de su fecha.
+- **Franja de una reserva**: por horas, de `hora_inicio` a `hora_fin` (como muy tarde las 23:59); día completo, de 00:00 a 24:00 de cada día de `fecha` a `fecha_fin`.
 - **Solapamiento**: dos franjas del mismo día se solapan si `inicio1 < fin2` y `inicio2 < fin1`. Cubre solapes parciales, totales y una contenida en otra.
-- **Inicio de una reserva**: su fecha a la `hora_inicio`; en día completo, a las 00:00.
+- **Inicio de una reserva**: su `fecha` a la `hora_inicio`; en día completo, su primer día a las 00:00.
 
 ## Modalidad por tipo de recurso
 
@@ -15,13 +15,13 @@
 | Equipo           | Por horas o día completo |
 
 ## Crear una reserva
-1. Una reserva ocupa como máximo un día: una sola `fecha`. Para varios días hacen falta varias reservas.
+1. Por horas, una reserva es de un solo día. Día completo, de 1 a 7 días seguidos: de `fecha` (el primero) a `fecha_fin` (el último, igual a `fecha` si es de un día).
 2. La modalidad debe ser válida para el tipo de recurso.
    - Por horas: `hora_inicio` y `hora_fin` informadas, con `hora_inicio < hora_fin`. `hora_fin` es como muy tarde las 23:59.
    - Día completo: sin horas.
 3. No se puede reservar en el pasado.
 4. `asistentes_sala`: obligatorio y `>= 1` en salas con aforo compartido; vacío en el resto de recursos. En una sala sin aforo compartido la reserva ocupa la sala entera, así que no se piden asistentes y `capacidadMaxima` es solo informativa.
-5. Sin aforo compartido: la franja no puede solaparse con ninguna reserva activa del recurso.
+5. Sin aforo compartido: la franja no puede solaparse con ninguna reserva activa del recurso en ninguno de sus días.
 6. Con aforo compartido: en ningún momento de la franja la suma de `asistentes_sala` de las reservas activas puede superar `capacidadMaxima`. Se comprueba el momento de máxima ocupación, no la suma de todas las reservas que se solapan.
 7. Estado inicial según el rol del titular:
    - Trabajador: `PENDIENTE`.
@@ -57,10 +57,10 @@
 19. Una reserva que ya ha comenzado no se puede transferir.
 
 ## Consultar disponibilidad
-20. Para un recurso y una fecha se devuelve:
-   - Las reservas activas de ese día, con su estado (explican por qué no está disponible).
+20. Para un recurso y una fecha (o un rango de hasta 7 días, en día completo) se devuelve:
+   - Las reservas activas de esos días, con su estado (explican por qué no está disponible).
    - Por horas: las franjas libres dentro del día, de 00:00 a 23:59 (la hora de fin máxima, regla 2).
    - Para cada franja, las reservas activas que la ocupan: si no está libre, son las que la bloquean.
-   - Día completo: si está disponible o no.
+   - Día completo: si está disponible o no todo el rango.
    - Con aforo compartido: la capacidad libre en cada franja.
    - Para cada franja y para el día completo, también si está libre sin contar las pendientes: lo que puede reservar un responsable (regla 8).

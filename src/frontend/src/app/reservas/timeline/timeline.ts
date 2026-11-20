@@ -12,6 +12,7 @@ import {
   Seleccion,
   seSolapa,
   textoHoras,
+  textoOcupacion,
 } from '../reserva.model';
 
 interface Bloque {
@@ -117,6 +118,7 @@ export class Timeline {
   }
 
   protected textoBloque(b: Bloque): string {
-    return `${textoHoras(b.reserva)}: ${nombreCompleto(b.reserva.titular)} (${ESTADO_RESERVA_LABELS[b.reserva.estado]})`;
+    const dias = b.reserva.fecha === b.reserva.fecha_fin ? '' : ` (${textoOcupacion(b.reserva)})`;
+    return `${textoHoras(b.reserva)}${dias}: ${nombreCompleto(b.reserva.titular)} (${ESTADO_RESERVA_LABELS[b.reserva.estado]})`;
   }
 }

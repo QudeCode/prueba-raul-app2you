@@ -1,15 +1,15 @@
 @let r = reserva();
 <app-dialogo [titulo]="titulo[accion()]" (cerrar)="cerrar.emit()">
   <p class="resumen">
-    {{ r.recurso.nombre }} · {{ formatoDiaLargo(r.fecha, true) }} · {{ textoHoras(r) }}
+    {{ r.recurso.nombre }} · {{ formatoRango(r.fecha, r.fecha_fin, true) }} · {{ textoHoras(r) }}
   </p>
 
   @if (accion() === 'cancelar') {
-    <p>¿Cancelar la reserva de {{ r.recurso.nombre }} el {{ formatoDiaLargo(r.fecha, true) }}?</p>
+    <p>¿Cancelar la reserva de {{ r.recurso.nombre }} {{ fechasDe(r) }}?</p>
   } @else if (accion() === 'rechazar') {
     <p>
-      ¿Rechazar la reserva de {{ nombreCompleto(r.titular) }} en {{ r.recurso.nombre }} el
-      {{ formatoDiaLargo(r.fecha, true) }}?
+      ¿Rechazar la reserva de {{ nombreCompleto(r.titular) }} en {{ r.recurso.nombre }}
+      {{ fechasDe(r) }}?
     </p>
   } @else {
     <label class="campo">

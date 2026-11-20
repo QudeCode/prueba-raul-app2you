@@ -10,8 +10,8 @@
 
   <dl class="datos">
     <div>
-      <dt>Fecha</dt>
-      <dd class="fecha">{{ formatoDiaLargo(r.fecha, true) }}</dd>
+      <dt>{{ r.fecha === r.fecha_fin ? 'Fecha' : 'Fechas' }}</dt>
+      <dd class="fecha">{{ formatoRango(r.fecha, r.fecha_fin, true) }}</dd>
     </div>
     <div>
       <dt>Horario</dt>

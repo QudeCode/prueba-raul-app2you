@@ -67,6 +67,7 @@ package Usuarios {
 package Reservas {
   class Reserva {
     fecha : Date
+    fechaFin : Date
     horaInicio : Time [0..1]
     horaFin : Time [0..1]
     asistentesSala : Integer [0..1]

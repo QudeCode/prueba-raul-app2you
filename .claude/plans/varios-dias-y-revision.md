@@ -188,3 +188,24 @@ Se trabaja en `master` con commits normales, sin reescribir el historial. Cada c
   - ver las tarjetas con el rango;
   - comprobar el favicon nuevo.
 - **Commits:** los tres, en orden y con la aprobación del usuario para cada uno.
+
+---
+
+## Cambios durante la implementación
+- **Commit 2:** los tramos vecinos solo se fusionan si tienen los mismos ocupantes (no basta con las mismas cargas). Si no, dos pendientes contiguas formaban una franja con las dos y el aviso de rechazos nombraba a ambas. Recogido en la 0017, con referencias en la 0013 y la 0016.
+- **Commit 3, backend:**
+  - `DisponibilidadRespuesta.fecha_fin`;
+  - `ReservaPeticion.ultimo_dia`, que da `fecha_fin` o `fecha`;
+  - la función pura `validar_rango`, compartida por consultar y crear.
+- **Commit 3, seed:** de cada 10 pendientes, 5 se aprueban, 2 se rechazan y 3 siguen pendientes, por posición y no al azar. Con la semilla fija y el sorteo, no quedaba ninguna para «Por aprobar».
+- **Commit 3, frontend:**
+  - en `fechas.ts`: `formatoRango` y `formatoDiaCorto`;
+  - en el modelo: `ultimosDiasPosibles`, `textoOcupacion` (con el día cuando se listan reservas de días distintos) y `fechasDe`, en lugar de `textoFechas`;
+  - el output del modal es `cambiarFechaFin`.
+- **Commit 3, tras la revisión:**
+  - el modal conserva la disponibilidad anterior mientras recarga (`linkedSignal`), así que el selector «Último día» no pierde el foco, y desactiva «Confirmar» mientras carga;
+  - `?hasta=` se ignora si el recurso no se reserva por días completos, y la modalidad por horas lo borra;
+  - textos de rango en el modal («Algún día del rango ya está ocupado», «Reservas»);
+  - las opciones del selector dicen cuántos días abarcaría la reserva;
+  - los bloques del timeline mantienen «Todo el día» y añaden el rango entre paréntesis.
+- **Diferido:** concentrar en un solo sitio los textos de rango del frontend (`fechasDe` y `formatoRango`), y que el mensaje de lista vacía diga «en estos días».

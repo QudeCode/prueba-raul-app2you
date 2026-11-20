@@ -5,7 +5,7 @@
   @let dat = vista();
   @if (d.error()) {
     <div class="aviso" role="alert">
-      <p>No se pudo cargar la disponibilidad del día.</p>
+      <p>No se pudo cargar la disponibilidad.</p>
       <button type="button" (click)="d.reload()" [disabled]="d.isLoading()">
         {{ d.isLoading() ? 'Reintentando…' : 'Reintentar' }}
       </button>
@@ -13,8 +13,8 @@
   } @else if (dat === null) {
     <p class="estado" role="status">Cargando disponibilidad…</p>
   } @else if (soloConsulta()) {
-    <h3>Reservas del día</h3>
-    <app-reservas-del-dia [reservas]="dat.reservas" />
+    <h3>Reservas</h3>
+    <app-reservas-del-dia [reservas]="dat.reservas" [conDia]="fechaFin() !== null" />
   } @else {
     @if (modalidades().length > 1) {
       <fieldset class="modalidad">
@@ -98,14 +98,32 @@
         />
       }
       @case ('DIA_COMPLETO') {
+        <div class="campos">
+          <label>
+            Último día
+            <select
+              #ultimo
+              aria-describedby="motivo-reserva"
+              (change)="elegirUltimoDia(ultimo.value)"
+            >
+              @for (d of ultimosDias(); track d.clave) {
+                <option [value]="d.clave" [selected]="d.clave === ultimoDia()">
+                  {{ d.texto }}
+                </option>
+              }
+            </select>
+          </label>
+        </div>
         <div
           class="todo-el-dia"
           [attr.data-libre]="dat.dia_completo_libre === false ? 'false' : 'true'"
         >
-          <strong>Todo el día</strong>
+          <strong>{{ fechaFin() ? 'Todos los días' : 'Todo el día' }}</strong>
           @if (dat.dia_completo_libre === false) {
             <span>Ocupado por:</span>
-            <app-reservas-del-dia [reservas]="dat.reservas" />
+            <app-reservas-del-dia [reservas]="dat.reservas" [conDia]="fechaFin() !== null" />
+          } @else if (cargando()) {
+            <span role="status">Comprobando los días…</span>
           } @else {
             <span>Libre</span>
           }
@@ -125,7 +143,7 @@
               : 'Al confirmar se rechazarán estas reservas pendientes:'
           }}
         </p>
-        <app-reservas-del-dia [reservas]="estorban()" />
+        <app-reservas-del-dia [reservas]="estorban()" [conDia]="fechaFin() !== null" />
       </div>
     }
     @if (error(); as texto) {
@@ -133,7 +151,7 @@
     }
     <button
       type="button"
-      [disabled]="motivo() !== null || enviando()"
+      [disabled]="motivo() !== null || enviando() || cargando()"
       [attr.aria-describedby]="estorban().length > 0 ? 'aviso-rechazos' : null"
       (click)="confirmarReserva()"
     >

@@ -1,4 +1,5 @@
 import calendar
+from collections import Counter
 from collections.abc import Callable
 from datetime import date, datetime, time, timedelta
 from typing import Annotated, NamedTuple
@@ -18,7 +19,7 @@ from app.reservas.dto import (
     ReservaPeticion,
     ReservaRespuesta,
 )
-from app.reservas.entity import Reserva
+from app.reservas.entity import MAX_DIAS_RESERVA, Reserva
 from app.reservas.repository import ESTADOS_ACTIVOS, ReservaRepository, get_reserva_repository
 from app.usuarios.dto import UsuarioRespuesta
 from app.usuarios.service import UsuarioService, get_usuario_service
@@ -36,6 +37,18 @@ def franja_de(hora_inicio: time | None, hora_fin: time | None) -> tuple[time, ti
     if hora_inicio is None or hora_fin is None:
         return INICIO_DIA, FIN_DIA
     return hora_inicio, hora_fin
+
+
+def validar_rango(recurso: RecursoRespuesta, fecha: date, fecha_fin: date, por_horas: bool) -> None:
+    """Regla 1: por horas, un solo día; día completo, de 1 a MAX_DIAS_RESERVA días seguidos."""
+    if fecha_fin < fecha:
+        raise ReglaIncumplida("La fecha de fin no puede ser anterior a la de inicio")
+    if fecha_fin == fecha:
+        return
+    if por_horas or recurso.modalidad_reserva not in DIA_COMPLETO:
+        raise ReglaIncumplida("Las reservas por horas son de un solo día")
+    if (fecha_fin - fecha).days >= MAX_DIAS_RESERVA:
+        raise ReglaIncumplida(f"Una reserva abarca como mucho {MAX_DIAS_RESERVA} días seguidos")
 
 
 def solapa(inicio_a: time, fin_a: time, inicio_b: time, fin_b: time) -> bool:
@@ -197,6 +210,7 @@ def reserva_a_respuesta(reserva: Reserva, ahora: datetime) -> ReservaRespuesta:
             UsuarioRespuesta.model_validate(reserva.aprobada_por) if reserva.aprobada_por else None
         ),
         fecha=reserva.fecha,
+        fecha_fin=reserva.fecha_fin,
         hora_inicio=reserva.hora_inicio,
         hora_fin=reserva.hora_fin,
         asistentes_sala=reserva.asistentes_sala,
@@ -210,7 +224,9 @@ def reserva_a_respuesta(reserva: Reserva, ahora: datetime) -> ReservaRespuesta:
 
 def describir(reserva: Reserva) -> str:
     """«09:00–10:30 de Ana García (pendiente)», para los mensajes de conflicto."""
-    if reserva.hora_inicio is None or reserva.hora_fin is None:
+    if reserva.fecha_fin != reserva.fecha:
+        cuando = f"del {reserva.fecha:%d/%m} al {reserva.fecha_fin:%d/%m}"
+    elif reserva.hora_inicio is None or reserva.hora_fin is None:
         cuando = "todo el día"
     else:
         cuando = f"{formato_hora(reserva.hora_inicio)}–{formato_hora(reserva.hora_fin)}"
@@ -247,20 +263,28 @@ class DisponibilidadService:
         self.recursos = recursos
         self.reloj = reloj
 
-    def consultar(self, recurso_id: int, fecha: date) -> DisponibilidadRespuesta:
-        """Regla 20. No recorta el pasado: eso lo decide quien consulta (y crear, regla 3)."""
+    def consultar(
+        self, recurso_id: int, fecha: date, fecha_fin: date | None = None
+    ) -> DisponibilidadRespuesta:
+        """Regla 20. No recorta el pasado: eso lo decide quien consulta (y crear, regla 3).
+
+        Con `fecha_fin`, la disponibilidad de día completo de todo el rango (decisión 0018).
+        """
         recurso = self.recursos.obtener(recurso_id)
-        reservas = self.repositorio.activas_del_dia(recurso_id, fecha)
+        fecha_fin = fecha_fin or fecha
+        validar_rango(recurso, fecha, fecha_fin, por_horas=False)
+        reservas = self.repositorio.activas_entre(recurso_id, fecha, fecha_fin)
         ahora = self.reloj()
 
         franjas = None
-        if recurso.modalidad_reserva in POR_HORAS:
+        if recurso.modalidad_reserva in POR_HORAS and fecha_fin == fecha:
             franjas = [self._franja(recurso, t) for t in self._tramos_del_dia(recurso, reservas)]
         dia_completo = recurso.modalidad_reserva in DIA_COMPLETO
         aprobadas = [r for r in reservas if r.estado == EstadoReserva.APROBADA]
         return DisponibilidadRespuesta(
             recurso_id=recurso_id,
             fecha=fecha,
+            fecha_fin=fecha_fin,
             reservas=[reserva_a_respuesta(reserva, ahora) for reserva in reservas],
             franjas=franjas,
             dia_completo_libre=(not reservas) if dia_completo else None,
@@ -271,15 +295,23 @@ class DisponibilidadService:
         self.recursos.obtener(recurso_id)
         desde = date(anio, mes, 1)
         hasta = date(anio, mes, calendar.monthrange(anio, mes)[1])
+        # Una reserva de varios días cuenta en cada uno de sus días dentro del mes
+        totales: Counter[date] = Counter()
+        for primero, ultimo in self.repositorio.rangos_activos(recurso_id, desde, hasta):
+            dia = max(primero, desde)
+            while dia <= min(ultimo, hasta):
+                totales[dia] += 1
+                dia += timedelta(days=1)
         return [
             DiaOcupadoRespuesta(fecha=fecha, reservas=total)
-            for fecha, total in self.repositorio.activas_por_dia(recurso_id, desde, hasta)
+            for fecha, total in sorted(totales.items())
         ]
 
     def comprobar_hueco(
         self,
         recurso: RecursoRespuesta,
         fecha: date,
+        fecha_fin: date,
         inicio: time,
         fin: time,
         asistentes: int | None,
@@ -288,10 +320,14 @@ class DisponibilidadService:
         """Reglas 5, 6 y 8: lanza Conflicto si la franja no cabe con las reservas que bloquean.
 
         A un trabajador le bloquean todas las activas; a un responsable, solo las aprobadas, y
-        devuelve las pendientes que tiene que rechazar (decisión 0016). Las reservas del día
+        devuelve las pendientes que tiene que rechazar (decisión 0016). Las reservas del rango
         quedan bloqueadas hasta el commit, para que nadie apruebe a la vez una que se rechaza.
+
+        Con varios días, la franja es el día entero y cualquier activa del rango la solapa, así que
+        basta con proyectarlas todas sobre un solo día. El aforo compartido solo existe en las
+        salas, que se reservan por horas y de un día (decisión 0018).
         """
-        reservas = self.repositorio.activas_del_dia_para_actualizar(recurso.id, fecha)
+        reservas = self.repositorio.activas_entre_para_actualizar(recurso.id, fecha, fecha_fin)
         bloqueantes = (
             [r for r in reservas if r.estado == EstadoReserva.APROBADA] if responsable else reservas
         )
@@ -366,11 +402,12 @@ class ReservaService:
         """
         recurso = self.recursos.obtener(peticion.recurso_id)
         inicio, fin = self._validar(peticion, recurso)
+        fecha_fin = peticion.ultimo_dia
         responsable = usuario.rol == Rol.RESPONSABLE
 
         self.repositorio.bloquear_recurso(recurso.id)
         rechazadas = self.disponibilidad.comprobar_hueco(
-            recurso, peticion.fecha, inicio, fin, peticion.asistentes_sala, responsable
+            recurso, peticion.fecha, fecha_fin, inicio, fin, peticion.asistentes_sala, responsable
         )
         for pendiente in rechazadas:
             pendiente.estado = EstadoReserva.RECHAZADA
@@ -381,6 +418,7 @@ class ReservaService:
             titular_id=usuario.id,
             aprobada_por_id=usuario.id if responsable else None,
             fecha=peticion.fecha,
+            fecha_fin=fecha_fin,
             hora_inicio=peticion.hora_inicio,
             hora_fin=peticion.hora_fin,
             asistentes_sala=peticion.asistentes_sala,
@@ -457,7 +495,7 @@ class ReservaService:
         return [reserva_a_respuesta(r, ahora) for r in self.repositorio.pendientes()]
 
     def _validar(self, peticion: ReservaPeticion, recurso: RecursoRespuesta) -> tuple[time, time]:
-        """Reglas 2, 3 y 4. Devuelve la franja de la reserva."""
+        """Reglas 1 a 4. Devuelve la franja de la reserva."""
         hora_inicio, hora_fin = peticion.hora_inicio, peticion.hora_fin
         if (hora_inicio is None) != (hora_fin is None):
             raise ReglaIncumplida(
@@ -470,6 +508,7 @@ class ReservaService:
             raise ReglaIncumplida(f"{recurso.nombre} solo se reserva por horas")
         if hora_inicio is not None and hora_fin is not None and hora_inicio >= hora_fin:
             raise ReglaIncumplida("La hora de inicio debe ser anterior a la de fin")
+        validar_rango(recurso, peticion.fecha, peticion.ultimo_dia, por_horas)
 
         if inicio_de(peticion.fecha, hora_inicio) <= self.reloj():
             raise ReglaIncumplida("No se puede reservar en el pasado")

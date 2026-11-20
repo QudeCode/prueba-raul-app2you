@@ -9,14 +9,23 @@ from app.usuarios.dto import UsuarioRespuesta
 
 
 class ReservaPeticion(BaseModel):
-    """Sin horas es día completo; con las dos, por horas (decisión 0012)."""
+    """Sin horas es día completo; con las dos, por horas (decisión 0012).
+
+    `fecha_fin` es el último día de una reserva de día completo; sin ella, la reserva es de un
+    solo día (regla 1, decisión 0018).
+    """
 
     recurso_id: int
     fecha: date
+    fecha_fin: date | None = None
     hora_inicio: HoraMinuto | None = None
     hora_fin: HoraMinuto | None = None
     # Sin `ge`: la regla 4 la valida el servicio (400)
     asistentes_sala: int | None = None
+
+    @property
+    def ultimo_dia(self) -> date:
+        return self.fecha_fin or self.fecha
 
 
 class TransferenciaPeticion(BaseModel):
@@ -29,6 +38,7 @@ class ReservaRespuesta(BaseModel):
     titular: UsuarioRespuesta
     aprobada_por: UsuarioRespuesta | None
     fecha: date
+    fecha_fin: date
     hora_inicio: HoraMinuto | None
     hora_fin: HoraMinuto | None
     asistentes_sala: int | None
@@ -62,7 +72,10 @@ class FranjaRespuesta(BaseModel):
 class DisponibilidadRespuesta(BaseModel):
     recurso_id: int
     fecha: date
+    # El último día consultado; igual a fecha si se consulta un solo día (decisión 0018)
+    fecha_fin: date
     reservas: list[ReservaRespuesta]
+    # Solo al consultar un día de un recurso que se reserva por horas
     franjas: list[FranjaRespuesta] | None
     dia_completo_libre: bool | None
     dia_completo_libre_sin_pendientes: bool | None

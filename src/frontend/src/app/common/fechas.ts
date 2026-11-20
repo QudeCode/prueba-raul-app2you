@@ -66,6 +66,20 @@ export function formatoDiaLargo(clave: string, conAnio = false): string {
   }).format(deClaveDia(clave));
 }
 
+/** «jueves, 3 de diciembre» o, si son días distintos, «del jueves, 3 de diciembre al sábado, 5 de diciembre». */
+export function formatoRango(desde: string, hasta: string, conAnio = false): string {
+  return desde === hasta
+    ? formatoDiaLargo(desde, conAnio)
+    : `del ${formatoDiaLargo(desde)} al ${formatoDiaLargo(hasta, conAnio)}`;
+}
+
+/** «3 dic». */
+export function formatoDiaCorto(clave: string): string {
+  return new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' }).format(
+    deClaveDia(clave),
+  );
+}
+
 /** «diciembre de 2026». */
 export function formatoMes(mes: string): string {
   return new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(

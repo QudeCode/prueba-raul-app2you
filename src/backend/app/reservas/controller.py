@@ -30,8 +30,10 @@ Disponibilidad = Annotated[DisponibilidadService, Depends(get_disponibilidad_ser
 
 
 @router_disponibilidad.get("")
-def consultar(service: Disponibilidad, recurso_id: int, fecha: date) -> DisponibilidadRespuesta:
-    return service.consultar(recurso_id, fecha)
+def consultar(
+    service: Disponibilidad, recurso_id: int, fecha: date, fecha_fin: date | None = None
+) -> DisponibilidadRespuesta:
+    return service.consultar(recurso_id, fecha, fecha_fin)
 
 
 @router_disponibilidad.get("/mes")

@@ -26,13 +26,24 @@ export class ReservasService {
       : undefined;
   });
 
-  disponibilidad(recursoId: Signal<number | null>, fecha: Signal<string | null>) {
+  /** Un día o, con `fechaFin`, un rango de día completo (regla 1). */
+  disponibilidad(
+    recursoId: Signal<number | null>,
+    fecha: Signal<string | null>,
+    fechaFin: Signal<string | null>,
+  ) {
     return httpResource<Disponibilidad>(() => {
       const id = recursoId();
       const dia = fecha();
-      return id === null || dia === null
-        ? undefined
-        : { url: `${API_URL}/recursos/${id}/disponibilidad`, params: { fecha: dia } };
+      const ultimo = fechaFin();
+      if (id === null || dia === null) {
+        return undefined;
+      }
+      const params: Record<string, string> = { fecha: dia };
+      if (ultimo !== null) {
+        params['fecha_fin'] = ultimo;
+      }
+      return { url: `${API_URL}/recursos/${id}/disponibilidad`, params };
     });
   }
 

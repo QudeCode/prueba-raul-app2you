@@ -1,8 +1,8 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { Dialogo } from '../../common/dialogo/dialogo';
-import { formatoDiaLargo } from '../../common/fechas';
+import { formatoRango } from '../../common/fechas';
 import { nombreCompleto, Usuario } from '../../usuarios/usuario.model';
-import { Reserva, textoHoras } from '../reserva.model';
+import { fechasDe, Reserva, textoHoras } from '../reserva.model';
 
 export type AccionReserva = 'cancelar' | 'transferir' | 'rechazar';
 
@@ -42,7 +42,8 @@ export class AccionDialogo {
     transferir: 'Transferir',
   };
   protected readonly nombreCompleto = nombreCompleto;
-  protected readonly formatoDiaLargo = formatoDiaLargo;
+  protected readonly formatoRango = formatoRango;
+  protected readonly fechasDe = fechasDe;
   protected readonly textoHoras = textoHoras;
 
   protected elegir(id: number): void {

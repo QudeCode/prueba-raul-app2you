@@ -35,6 +35,7 @@ entity reserva {
   * titular_id : INTEGER <<FK>>
   aprobada_por_id : INTEGER <<FK>>
   * fecha : DATE
+  * fecha_fin : DATE
   hora_inicio : TIME
   hora_fin : TIME
   asistentes_sala : INTEGER

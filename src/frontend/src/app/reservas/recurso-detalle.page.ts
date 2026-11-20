@@ -10,12 +10,14 @@ import { UsuariosService } from '../usuarios/usuarios.service';
 import { Calendario } from './calendario/calendario';
 import { NavegacionDia } from './navegacion-dia/navegacion-dia';
 import {
+  modalidadesDe,
   primerDiaElegible,
   Reserva,
   ReservaCreada,
   ReservaNueva,
   soloDiaCompleto,
   textoRechazadas,
+  ultimosDiasPosibles,
 } from './reserva.model';
 import { ReservaModal } from './reserva-modal/reserva-modal';
 import { ReservasDelDia } from './reservas-del-dia/reservas-del-dia';
@@ -28,10 +30,11 @@ import { ReservasService } from './reservas.service';
   styleUrl: './recurso-detalle.page.scss',
 })
 export class RecursoDetallePage {
-  /** Parámetros de la URL (decisión 0009): `/recursos/:id?mes=YYYY-MM&fecha=YYYY-MM-DD`. */
+  /** Parámetros de la URL (decisión 0009): `/recursos/:id?mes=YYYY-MM&fecha=YYYY-MM-DD&hasta=YYYY-MM-DD`. */
   readonly id = input<string>();
   readonly mes = input<string>();
   readonly fecha = input<string>();
+  readonly hasta = input<string>();
 
   private readonly router = inject(Router);
   private readonly reservas = inject(ReservasService);
@@ -68,12 +71,31 @@ export class RecursoDetallePage {
     return this.recursos.value().find((r) => r.id === Number(this.id()));
   });
 
+  /**
+   * Último día de una reserva de día completo de varios días (regla 1); `null` si es de uno o el
+   * recurso no se reserva por días completos.
+   */
+  protected readonly hastaActiva = computed(() => {
+    const fecha = this.fechaActiva();
+    const hasta = this.hasta();
+    const recurso = this.recurso();
+    const porDias = recurso !== undefined && modalidadesDe(recurso).includes('DIA_COMPLETO');
+    return porDias &&
+      fecha &&
+      hasta &&
+      hasta !== fecha &&
+      ultimosDiasPosibles(fecha).includes(hasta)
+      ? hasta
+      : null;
+  });
+
   private readonly recursoId = computed(() => this.recurso()?.id ?? null);
 
   protected readonly mesReservas = this.reservas.mes(this.recursoId, this.mesActivo);
   protected readonly disponibilidad = this.reservas.disponibilidad(
     this.recursoId,
     this.fechaActiva,
+    this.hastaActiva,
   );
 
   protected readonly conteos = computed(() =>
@@ -101,9 +123,10 @@ export class RecursoDetallePage {
   protected readonly textoRechazadas = textoRechazadas;
 
   constructor() {
-    // El error de la API es del día en el que se produjo
+    // El error de la API es de los días en los que se produjo
     effect(() => {
       this.fechaActiva();
+      this.hastaActiva();
       untracked(() => this.errorReserva.set(null));
     });
   }
@@ -111,7 +134,11 @@ export class RecursoDetallePage {
   protected elegirDia(fecha: string): void {
     this.aviso.set(null);
     this.rechazadas.set([]);
-    this.irA({ fecha, mes: claveMes(fecha) });
+    this.irA({ fecha, mes: claveMes(fecha), hasta: null });
+  }
+
+  protected cambiarHasta(hasta: string | null): void {
+    this.irA({ hasta });
   }
 
   protected cambiarMes(mes: string): void {
@@ -119,7 +146,7 @@ export class RecursoDetallePage {
   }
 
   protected cerrarModal(): void {
-    this.irA({ fecha: null });
+    this.irA({ fecha: null, hasta: null });
   }
 
   protected reservar(nueva: ReservaNueva): void {

@@ -34,3 +34,4 @@ Las reservas añaden operaciones que no son un CRUD: crear con validación de co
 - Los mensajes de error están en español y el frontend los muestra tal cual (`detail`).
 - Un error del dominio nuevo solo necesita su subclase y una fila en `ESTADO_HTTP`.
 - Los apuntes del usuario esbozaban `PUT` para las acciones; manda esta decisión.
+- La petición de crear admite `fecha_fin` para las reservas de día completo de varios días (decisión 0018).

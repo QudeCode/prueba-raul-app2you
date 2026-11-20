@@ -8,6 +8,9 @@ from app.database import Base, check_enum, tipo_enum
 from app.recursos.entity import Recurso
 from app.usuarios.entity import Usuario
 
+# Regla 1: una reserva de día completo abarca como mucho 7 días seguidos (decisión 0018)
+MAX_DIAS_RESERVA = 7
+
 
 class Reserva(Base):
     """Las reglas que cruzan tablas (modalidad según el tipo, asistentes) van en el servicio."""
@@ -15,6 +18,12 @@ class Reserva(Base):
     __tablename__ = "reserva"
     __table_args__ = (
         check_enum("estado", EstadoReserva, "ck_reserva_estado"),
+        # Regla 1: fecha es el primer día y fecha_fin el último; por horas, un solo día
+        CheckConstraint("fecha_fin >= fecha", name="ck_reserva_fechas_orden"),
+        CheckConstraint(
+            "hora_inicio IS NULL OR fecha_fin = fecha", name="ck_reserva_por_horas_un_dia"
+        ),
+        CheckConstraint(f"fecha_fin - fecha < {MAX_DIAS_RESERVA}", name="ck_reserva_max_dias"),
         CheckConstraint(
             "(hora_inicio IS NULL) = (hora_fin IS NULL)", name="ck_reserva_horas_juntas"
         ),
@@ -34,7 +43,7 @@ class Reserva(Base):
             f"estado <> '{EstadoReserva.APROBADA}' OR aprobada_por_id IS NOT NULL",
             name="ck_reserva_aprobada_con_aprobador",
         ),
-        Index("ix_reserva_recurso_fecha", "recurso_id", "fecha"),
+        Index("ix_reserva_recurso_fecha", "recurso_id", "fecha", "fecha_fin"),
         Index("ix_reserva_titular", "titular_id"),
     )
 
@@ -43,6 +52,7 @@ class Reserva(Base):
     titular_id: Mapped[int] = mapped_column(ForeignKey("usuario.id"))
     aprobada_por_id: Mapped[int | None] = mapped_column(ForeignKey("usuario.id"))
     fecha: Mapped[date]
+    fecha_fin: Mapped[date]
     hora_inicio: Mapped[time | None]
     hora_fin: Mapped[time | None]
     asistentes_sala: Mapped[int | None]

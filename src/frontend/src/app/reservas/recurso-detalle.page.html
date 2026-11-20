@@ -19,7 +19,7 @@
   @if (rechazadas().length > 0) {
     <div class="rechazos" role="status">
       <p>{{ textoRechazadas(rechazadas().length) }}</p>
-      <app-reservas-del-dia [reservas]="rechazadas()" />
+      <app-reservas-del-dia [reservas]="rechazadas()" [conDia]="true" />
     </div>
   }
 
@@ -52,11 +52,13 @@
     <app-reserva-modal
       [recurso]="r"
       [fecha]="f"
+      [fechaFin]="hastaActiva()"
       [ahora]="ahora()"
       [disponibilidad]="disponibilidad"
       [enviando]="enviando()"
       [error]="errorReserva()"
       [responsable]="responsable()"
+      (cambiarFechaFin)="cambiarHasta($event)"
       (confirmar)="reservar($event)"
       (cerrar)="cerrarModal()"
     >

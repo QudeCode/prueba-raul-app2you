@@ -19,3 +19,4 @@
 | [0015](0015-rutas-rest-de-recursos-y-reservas.md) | Rutas REST de recursos, reservas y disponibilidad | aceptada |
 | [0016](0016-responsable-reserva-sobre-pendientes.md) | Un responsable reserva sobre pendientes | aceptada · ADR |
 | [0017](0017-franjas-con-sus-reservas.md) | Cada franja dice qué reservas la ocupan | aceptada |
+| [0018](0018-reservas-de-varios-dias.md) | Reservas de varios días | aceptada · ADR |
