@@ -1,0 +1,45 @@
+<span class="etiqueta-seccion">Mis reservas</span>
+<h1>Reservas</h1>
+
+<nav class="pestanas" aria-label="Estado de las reservas">
+  <a
+    routerLink="."
+    [queryParams]="{ pestana: null }"
+    queryParamsHandling="merge"
+    [attr.aria-current]="pestanaActiva() === 'activas' ? 'page' : null"
+    >Activas ({{ cuentas().activas }})</a
+  >
+  <a
+    routerLink="."
+    [queryParams]="{ pestana: 'pasadas' }"
+    queryParamsHandling="merge"
+    [attr.aria-current]="pestanaActiva() === 'pasadas' ? 'page' : null"
+    >Pasadas ({{ cuentas().pasadas }})</a
+  >
+</nav>
+
+@let f = fuente();
+@if (usuariosService.actual() === null) {
+  <p class="estado" role="status">
+    {{ usuariosService.usuarios.error() ? 'Usuarios no disponibles.' : 'Cargando usuario…' }}
+  </p>
+} @else if (f.error()) {
+  <div class="aviso" role="alert">
+    <p>No se pudieron cargar las reservas. Comprueba que el backend está arrancado.</p>
+    <button type="button" (click)="f.reload()" [disabled]="f.isLoading()">
+      {{ f.isLoading() ? 'Reintentando…' : 'Reintentar' }}
+    </button>
+  </div>
+} @else if (f.isLoading() && !f.hasValue()) {
+  <p class="estado" role="status">Cargando reservas…</p>
+} @else if (visibles().length === 0) {
+  <p class="estado" role="status">{{ vacio[pestanaActiva()] }}</p>
+} @else {
+  <ul class="rejilla">
+    @for (r of visibles(); track r.id) {
+      <li>
+        <app-reserva-card [reserva]="r" />
+      </li>
+    }
+  </ul>
+}

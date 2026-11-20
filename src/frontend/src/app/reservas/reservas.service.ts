@@ -1,6 +1,6 @@
 import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable, Signal } from '@angular/core';
-import { Observable, throwError } from 'rxjs';
+import { Observable, tap, throwError } from 'rxjs';
 import { API_URL } from '../common/api';
 import { UsuariosService } from '../usuarios/usuarios.service';
 import { DiaOcupado, Disponibilidad, Reserva, ReservaNueva } from './reserva.model';
@@ -10,6 +10,12 @@ import { DiaOcupado, Disponibilidad, Reserva, ReservaNueva } from './reserva.mod
 export class ReservasService {
   private readonly http = inject(HttpClient);
   private readonly usuarios = inject(UsuariosService);
+
+  /** Reservas del usuario actual. Leer su id hace que se pidan de nuevo al cambiar de usuario. */
+  readonly mias = httpResource<Reserva[]>(() => {
+    const headers = this.cabeceras();
+    return headers ? { url: `${API_URL}/reservas/mias`, headers } : undefined;
+  });
 
   disponibilidad(recursoId: Signal<number | null>, fecha: Signal<string | null>) {
     return httpResource<Disponibilidad>(() => {
@@ -50,6 +56,10 @@ export class ReservasService {
     if (!headers) {
       return throwError(() => new Error('No hay usuario seleccionado.'));
     }
-    return this.http.post<Reserva>(`${API_URL}/reservas${ruta}`, cuerpo ?? null, { headers });
+    return this.http.post<Reserva>(`${API_URL}/reservas${ruta}`, cuerpo ?? null, { headers }).pipe(
+      tap(() => {
+        this.mias.reload();
+      }),
+    );
   }
 }

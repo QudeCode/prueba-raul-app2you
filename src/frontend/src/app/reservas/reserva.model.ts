@@ -50,6 +50,7 @@ export interface ReservaNueva {
 }
 
 export type Modalidad = Exclude<ModalidadReserva, 'AMBAS'>;
+export type Pestana = 'activas' | 'pasadas';
 
 /** Tramo del día en minutos desde las 00:00. */
 export interface Seleccion {
@@ -99,6 +100,15 @@ export function capacidadCompartida(recurso: Recurso): number | null {
 /** El recurso solo admite reservas de día completo (vehículos). */
 export function soloDiaCompleto(recurso: Recurso): boolean {
   return modalidadesDe(recurso).every((m) => m === 'DIA_COMPLETO');
+}
+
+export function esActiva(reserva: Reserva): boolean {
+  return reserva.estado === 'PENDIENTE' || reserva.estado === 'APROBADA';
+}
+
+/** Una reserva de hoy sigue en «activas» todo el día. */
+export function pestanaDe(reserva: Reserva, hoy: string): 'activas' | 'pasadas' {
+  return esActiva(reserva) && reserva.fecha >= hoy ? 'activas' : 'pasadas';
 }
 
 /** Regla 3 con el inicio a las 00:00 en día completo: hoy ya no se puede reservar. */

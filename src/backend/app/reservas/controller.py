@@ -39,6 +39,11 @@ def resumen_mes(
     return service.resumen_mes(recurso_id, anio, mes)
 
 
+@router.get("/mias")
+def mias(service: Reservas, usuario: UsuarioActual) -> list[ReservaRespuesta]:
+    return service.mias(usuario)
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 def crear(service: Reservas, usuario: UsuarioActual, peticion: ReservaPeticion) -> ReservaRespuesta:
     return service.crear(peticion, usuario)

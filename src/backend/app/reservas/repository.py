@@ -56,6 +56,12 @@ class ReservaRepository:
         )
         return [(fecha, total) for fecha, total in self.session.execute(consulta)]
 
+    def de_titular(self, usuario_id: int) -> list[Reserva]:
+        consulta = _con_relaciones(
+            select(Reserva).where(Reserva.titular_id == usuario_id).order_by(*ORDEN)
+        )
+        return list(self.session.scalars(consulta))
+
     def bloquear_recurso(self, recurso_id: int) -> None:
         """Serializa las reservas de un recurso hasta el commit (decisión 0013)."""
         self.session.execute(select(Recurso.id).where(Recurso.id == recurso_id).with_for_update())

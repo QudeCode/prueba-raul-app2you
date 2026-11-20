@@ -1,0 +1,37 @@
+@let r = reserva();
+<article class="tarjeta" [attr.data-tipo]="r.recurso.tipo">
+  <app-recurso-cabecera
+    [recurso]="r.recurso"
+    [enlace]="'/recursos/' + r.recurso.id"
+    [parametros]="{ fecha: r.fecha, mes: claveMes(r.fecha) }"
+  />
+
+  <span class="estado" [attr.data-estado]="r.estado">{{ estadoLabel[r.estado] }}</span>
+
+  <dl class="datos">
+    <div>
+      <dt>Fecha</dt>
+      <dd class="fecha">{{ formatoDiaLargo(r.fecha, true) }}</dd>
+    </div>
+    <div>
+      <dt>Horario</dt>
+      <dd>{{ textoHoras(r) }}</dd>
+    </div>
+    @if (r.asistentes_sala !== null) {
+      <div>
+        <dt>Asistentes</dt>
+        <dd>{{ r.asistentes_sala }}</dd>
+      </div>
+    }
+    <div>
+      <dt>Cancelación</dt>
+      <dd>{{ politicaLabel[r.recurso.politica_cancelacion] }}</dd>
+    </div>
+    @if (r.aprobada_por; as aprobador) {
+      <div>
+        <dt>Aprobada por</dt>
+        <dd>{{ nombreCompleto(aprobador) }}</dd>
+      </div>
+    }
+  </dl>
+</article>

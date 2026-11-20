@@ -226,6 +226,9 @@ class ReservaService:
         self.repositorio.guardar(reserva)
         return self._confirmar(reserva.id)
 
+    def mias(self, usuario: UsuarioRespuesta) -> list[ReservaRespuesta]:
+        return [reserva_a_respuesta(r) for r in self.repositorio.de_titular(usuario.id)]
+
     def _validar(self, peticion: ReservaPeticion, recurso: RecursoRespuesta) -> tuple[time, time]:
         """Reglas 2, 3 y 4. Devuelve la franja de la reserva."""
         hora_inicio, hora_fin = peticion.hora_inicio, peticion.hora_fin
