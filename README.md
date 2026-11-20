@@ -41,7 +41,7 @@ Las credenciales (`reservas`/`reservas`) son solo de desarrollo y el puerto se p
 
 > Para empezar de cero (o si cambias las variables `POSTGRES_*` de `docker-compose.yml`): `docker compose down -v`. Si el puerto 5432 ya está ocupado por otro PostgreSQL, páralo antes o cambia el puerto publicado y la `DATABASE_URL`.
 
-### Backend → http://localhost:8000 (documentación: `/docs`)
+### Backend → http://localhost:8000/docs
 
 ```bash
 cd src/backend

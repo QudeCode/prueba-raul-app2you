@@ -76,12 +76,12 @@ Se dejan para el plan de reservas, que es donde se usan: los errores del dominio
   - `PoliticaCancelacion`: FLEXIBLE, MODERADA, BLOQUEADA
   - `ModalidadReserva`: POR_HORAS, DIA_COMPLETO, AMBAS
   - `EstadoReserva`: PENDIENTE, APROBADA, RECHAZADA, CANCELADA
-- `main.py`: crea la app, importa `app.entidades` e incluye los routers de usuarios y recursos.
+- `main.py`: crea la app, registra las entidades (`from app import entidades`), mantiene el CORS e incluye los routers de usuarios y recursos. El `GET /` "Hello world" se quita (tarea 4).
 
 **Módulo `usuarios/`**
 - `entity.py`: `Usuario`, tabla `usuario`. `id` es la clave primaria; `nombre`, `apellidos` y `rol` son obligatorios; `CHECK ck_usuario_rol`.
-- `repository.py`: `UsuarioRepository(session).listar()`, ordenado por apellidos, nombre e id.
-- `service.py`: `UsuarioService(repo).listar() -> list[UsuarioRespuesta]`.
+- `repository.py`: `UsuarioRepository(session).listar()`, ordenado por apellidos, nombre e id; proveedor `get_usuario_repository` (con `get_session`).
+- `service.py`: `UsuarioService(repo).listar() -> list[UsuarioRespuesta]`; proveedor `get_usuario_service`. Cada capa expone su proveedor junto a su clase (convención de la tarea 4, que `recursos` repite).
 - `dto.py`: `UsuarioRespuesta` con `id`, `nombre`, `apellidos` y `rol`, y `from_attributes=True`.
 - `controller.py`: `GET /usuarios`, que devuelve `list[UsuarioRespuesta]`.
 

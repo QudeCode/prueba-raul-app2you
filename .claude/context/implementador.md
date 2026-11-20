@@ -8,7 +8,9 @@
 Ninguna: no hay plugin de stack para FastAPI ni Angular.
 
 ## Reutilizar antes de crear
-- `app/database.py` (`get_session`, `check_enum`, `recrear_esquema`), `app/common/enums.py`, `app/entidades.py`.
+- `app/database.py` (`get_session`, `tipo_enum`, `check_enum`, `es_local`, `recrear_esquema`), `app/common/enums.py`, `app/entidades.py`.
+- Patrón de capas de `app/usuarios/`: cada capa expone su proveedor para `Depends` junto a su clase (`get_<x>_repository` en `repository.py`, `get_<x>_service` en `service.py`); el controller solo importa el servicio y los DTO. Columnas de enum con `tipo_enum` + `check_enum`.
+- `main.py` registra las entidades con `from app import entidades` (no `import app.entidades`: pisaría el nombre `app`).
 
 ## No tocar
 - `src/backend/.venv` (es el de la máquina local) y cualquier `.env`.

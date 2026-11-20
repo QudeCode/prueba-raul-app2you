@@ -4,7 +4,7 @@ import { RouterOutlet } from '@angular/router';
 const API = 'http://localhost:8000';
 
 // Comprobación provisional de que el frontend llega a cada GET del backend
-const RUTAS = ['/', '/usuarios', '/recursos'];
+const RUTAS = ['/usuarios', '/recursos'];
 
 @Component({
   imports: [RouterOutlet],
