@@ -2,7 +2,7 @@
 
 Sistema de reservas de recursos empresariales (ver [enunciado](docs/enunciado.md)).
 
-Las reglas de negocio acordadas están en [docs/reglas_negocio.md](docs/reglas_negocio.md), la arquitectura por capas en [docs/arquitectura.md](docs/arquitectura.md) (con los diagramas [reducido](docs/diagramas/arquitectura_capas.puml) y [detallado](docs/diagramas/arquitectura.puml)) y las decisiones técnicas en [docs/decisiones/](docs/decisiones/README.md).
+Las reglas de negocio acordadas están en [docs/reglas_negocio.md](docs/reglas_negocio.md), la arquitectura por capas en [docs/arquitectura.md](docs/arquitectura.md) (con los diagramas [reducido](docs/diagramas/arquitectura_capas.svg) y [detallado](docs/diagramas/arquitectura.svg)) y las decisiones técnicas en [docs/decisiones/](docs/decisiones/README.md).
 
 | Capa     | Tecnología       | Carpeta         |
 |----------|------------------|-----------------|
@@ -107,7 +107,28 @@ curl -X POST -H "X-Usuario-Id: 3" http://localhost:8000/reservas/<id>/aprobar
 ```
 
 - **`docs/`** es para cualquier lector: el enunciado, las reglas de negocio acordadas, los apuntes con las decisiones de negocio, los diagramas de clases y de base de datos, y las decisiones técnicas con su porqué.
-- **`.claude/`** contiene el material del desarrollo asistido con IA (ver el apartado siguiente).
+- **`.claude/`** contiene el material del desarrollo asistido con IA (ver «Uso de IA»).
+
+## Arquitectura
+
+![Arquitectura por capas](docs/diagramas/arquitectura_capas.svg)
+
+**General.** Un monolito con dos partes, un frontend en Angular y un backend en FastAPI, sobre PostgreSQL en Docker Compose. El problema tiene tres dominios pequeños y muy relacionados (usuarios, recursos y reservas): microservicios o despliegues separados serían coste operativo sin beneficio. Las dos partes tienen la misma forma: **un módulo por funcionalidad** (`usuarios`, `recursos`, `reservas`, más `common`) y, dentro, **capas que se llaman en una sola dirección**. Entre módulos también hay una dirección: `reservas` usa `recursos` y `usuarios`, nunca al revés.
+
+**Backend** (decisiones [0001](docs/decisiones/0001-monolito-modular-por-capas.md) y [0002](docs/decisiones/0002-fastapi-sqlalchemy-pydantic.md)): `controller → service → repository`, con un fichero por capa en cada módulo.
+- El **controller** traduce HTTP: rutas, validación de la forma con Pydantic y el usuario actual. Sin reglas de negocio.
+- El **service** aplica las reglas numeradas de [reglas_negocio.md](docs/reglas_negocio.md) y lanza errores del dominio sin saber de HTTP; un único manejador los traduce a 400, 401, 403, 404 o 409 ([0012](docs/decisiones/0012-api-de-reservas-y-errores.md)).
+- El **repository** es el único que habla con la base de datos, con SQLAlchemy.
+- Lo delicado son funciones puras: la disponibilidad y la validación de conflictos usan **la misma partición del día en tramos**, así que lo que la consulta muestra como libre es lo que se puede reservar ([0013](docs/decisiones/0013-disponibilidad-por-tramos.md)). Dos reservas simultáneas no pueden ocupar el mismo hueco: crear bloquea la fila del recurso hasta el commit.
+- Por qué: separa HTTP, reglas y persistencia sin la ceremonia de una arquitectura hexagonal (puertos, adaptadores, mappers), que aquí no tendría una segunda implementación.
+
+**Frontend** ([0008](docs/decisiones/0008-estructura-y-datos-del-frontend.md)): presentación → datos, y un modelo compartido.
+- **Presentación:** las páginas leen la URL (el estado de la vista vive en ella, [0009](docs/decisiones/0009-estado-en-la-url-y-filtrado-en-cliente.md)) y los componentes solo reciben datos y emiten eventos.
+- **Datos:** un servicio por funcionalidad es el único que conoce la API, con `httpResource` y signals.
+- **Modelo:** los tipos del contrato y las reglas que la interfaz repite para no ofrecer lo que la API rechazaría, en funciones puras sin Angular. El backend sigue siendo la autoridad: los plazos de cancelación, por ejemplo, llegan calculados.
+- Por qué: es la organización por funcionalidad que recomienda la guía oficial de Angular, y con signals no hace falta un store global (NgRx) ni fachadas para un estado que no comparten muchas vistas.
+
+Más detalle: [docs/arquitectura.md](docs/arquitectura.md) (capas, módulos y comunicaciones), el [diagrama detallado](docs/diagramas/arquitectura.svg), el [modelo de clases](docs/diagramas/modelo_recursos.svg) y el [modelo de base de datos](docs/diagramas/modelo_bd.svg).
 
 ## Uso de IA
 

@@ -1,6 +1,6 @@
 # Arquitectura
 
-Vista reducida de cómo está construida la aplicación: qué capas hay, para qué sirve cada una y por qué se comunican como lo hacen. El detalle de los componentes de cada capa está en [diagramas/arquitectura.puml](diagramas/arquitectura.puml); esta vista, en [diagramas/arquitectura_capas.puml](diagramas/arquitectura_capas.puml).
+Vista reducida de cómo está construida la aplicación: qué capas hay, para qué sirve cada una y por qué se comunican como lo hacen. El detalle de los componentes de cada capa está en [diagramas/arquitectura.svg](diagramas/arquitectura.svg); esta vista, en [diagramas/arquitectura_capas.svg](diagramas/arquitectura_capas.svg). Los `.puml` de la misma carpeta son su fuente.
 
 La aplicación es un monolito con dos partes, un frontend en Angular y un backend en FastAPI, y una base de datos PostgreSQL (decisiones [0001](decisiones/0001-monolito-modular-por-capas.md), [0002](decisiones/0002-fastapi-sqlalchemy-pydantic.md) y [0007](decisiones/0007-postgresql-docker-compose.md)). Las dos partes tienen la misma forma: capas que se llaman en una sola dirección, cada una solo a la siguiente, y un modelo que comparten todas ([0008](decisiones/0008-estructura-y-datos-del-frontend.md)).
 
