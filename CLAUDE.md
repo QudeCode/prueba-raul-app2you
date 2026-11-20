@@ -13,7 +13,7 @@ Todo se ejecuta en la máquina local, que es la referencia: si algo funciona en 
 - Tests: no hay (ver Reglas duras).
 
 ## Reglas duras
-- Sin tests en el repositorio: el enunciado no los pide y el tiempo se dedica al análisis, el modelado y la implementación. Claude puede probar con scripts temporales fuera del repo.
+- Sin tests en el repositorio: se indicó no incluirlos, y el tiempo se dedica al análisis, el modelado y la implementación. Claude puede probar con scripts temporales fuera del repo.
 - `src/backend/.venv` es el de la máquina local: Claude no lo usa ni lo modifica. Para probar, Claude usa un venv propio fuera del repo.
 - PostgreSQL corre en Docker Compose (decisión 0007), arrancado en la máquina local. Desde el contenedor se llega por `host.docker.internal:5432`.
 - Antes de proponer algo, respetar el modelo y las reglas: `docs/reglas_negocio.md` (reglas numeradas) y los diagramas de `docs/diagramas/`.

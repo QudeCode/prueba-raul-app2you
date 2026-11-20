@@ -26,11 +26,13 @@ pyenv install --skip-existing    # instala la versión de .python-version
 
 > pyenv activa la versión al entrar en el directorio. Con nvm, en cada terminal nueva hay que ejecutar `nvm use`, salvo que tengas configurado el cambio automático.
 
+> **Windows:** los comandos son de bash. Funcionan tal cual en Git Bash o WSL. En PowerShell o `cmd`, usa `copy` en lugar de `cp` y `python` (o `py`) en lugar de `python3`. Para la API, la documentación interactiva de `/docs` sustituye a los ejemplos con `curl`.
+
 ## Ejecución
 
 ### Base de datos → PostgreSQL 17 en `localhost:5432`
 
-Desde la raíz del repositorio, en una terminal de tu máquina:
+Con Docker Desktop (o el demonio de Docker) arrancado, desde la raíz del repositorio:
 
 ```bash
 docker compose up -d
@@ -63,6 +65,10 @@ npm start
 ```
 
 > Con el backend arrancado, abre el listado de recursos (`/recursos`), con filtro por tipo. Las imágenes de cada tipo están en `src/frontend/public/imagenes/recursos/`.
+
+## Tests
+
+No hay tests automáticos: se indicó no incluirlos, y el tiempo se ha dedicado al análisis, el modelado y la implementación. Las reglas se han comprobado con pruebas manuales contra la API y la interfaz.
 
 ## Uso
 
