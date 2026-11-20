@@ -34,9 +34,11 @@ class ReservaRespuesta(BaseModel):
     asistentes_sala: int | None
     estado: EstadoReserva
     creada_en: datetime
-    # Estado activo y dentro del plazo de la política al construir la respuesta; no comprueban el titular
+    # Estado y plazos al construir la respuesta (de la política, o el inicio para aprobar);
+    # no comprueban el titular ni el rol
     puede_cancelar: bool
     puede_transferir: bool
+    puede_aprobar: bool
 
 
 class FranjaRespuesta(BaseModel):

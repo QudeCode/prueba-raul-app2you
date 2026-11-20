@@ -79,6 +79,11 @@ def puede_transferir(politica: PoliticaCancelacion, inicio: datetime, ahora: dat
     return False
 
 
+def comenzada(inicio: datetime, ahora: datetime) -> bool:
+    """Regla 21: una reserva ha comenzado cuando llega su inicio."""
+    return ahora >= inicio
+
+
 def capacidad_compartida(recurso: RecursoRespuesta) -> int | None:
     """La capacidad de una sala con aforo compartido (regla 6); None en el resto de recursos."""
     if isinstance(recurso, SalaReunionRespuesta) and recurso.aforo_compartido:
@@ -110,6 +115,7 @@ def reserva_a_respuesta(reserva: Reserva, ahora: datetime) -> ReservaRespuesta:
         creada_en=reserva.creada_en,
         puede_cancelar=activa and puede_cancelar(politica, inicio, ahora),
         puede_transferir=activa and puede_transferir(politica, inicio, ahora),
+        puede_aprobar=reserva.estado == EstadoReserva.PENDIENTE and not comenzada(inicio, ahora),
     )
 
 
@@ -270,9 +276,11 @@ class ReservaService:
         return self._confirmar(reserva.id)
 
     def aprobar(self, reserva_id: int, usuario: UsuarioRespuesta) -> ReservaRespuesta:
-        """Reglas 9, 10 y 12: no vuelve a comprobar conflictos, la pendiente ya bloqueaba su franja."""
+        """Reglas 9, 10, 12 y 21: no vuelve a comprobar conflictos, la pendiente ya bloqueaba su franja."""
         reserva = self._para_actualizar(reserva_id)
         self._exigir_pendiente_y_responsable(reserva, usuario, "aprobar")
+        if comenzada(inicio_de(reserva.fecha, reserva.hora_inicio), self.reloj()):
+            raise Conflicto("No se puede aprobar una reserva que ya ha comenzado")
         reserva.estado = EstadoReserva.APROBADA
         reserva.aprobada_por_id = usuario.id
         return self._confirmar(reserva.id)

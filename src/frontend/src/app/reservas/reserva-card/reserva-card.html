@@ -43,6 +43,9 @@
 
   @if (hayAcciones()) {
     <footer class="pie">
+      @if (r.estado === 'PENDIENTE' && acciones().rechazar && !acciones().aprobar) {
+        <p class="nota">Ya ha comenzado: solo se puede rechazar.</p>
+      }
       @if (acciones().aprobar) {
         <button
           type="button"

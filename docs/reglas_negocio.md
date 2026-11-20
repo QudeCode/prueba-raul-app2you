@@ -34,6 +34,8 @@
 11. Rechazar: pasa a `RECHAZADA`.
 12. Al aprobar no se vuelven a comprobar conflictos: la reserva pendiente ya bloqueaba su franja, así que nadie ha podido reservar encima.
 
+21) Solo se aprueba una reserva que no ha comenzado (concepto «Inicio»). Una pendiente que ya ha comenzado solo se puede rechazar; mientras no se rechace, sigue activa y ocupando el recurso.
+
 ## Cancelar o transferir
 13. Solo el titular, y solo sobre reservas activas.
 14. Los plazos se cuentan hasta el inicio de la reserva.

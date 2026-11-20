@@ -19,6 +19,7 @@ export interface Reserva {
   creada_en: string;
   puede_cancelar: boolean;
   puede_transferir: boolean;
+  puede_aprobar: boolean;
 }
 
 export interface Franja {

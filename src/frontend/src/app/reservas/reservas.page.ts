@@ -108,10 +108,10 @@ export class ReservasPage {
     reserva: Reserva;
   } | null>(null);
 
-  /** Acciones de cada tarjeta según la pestaña y lo que calcula el backend (plazos de las reglas 14 a 19). */
+  /** Acciones de cada tarjeta según la pestaña y lo que calcula el backend (plazos de las reglas 14 a 19 y 21). */
   protected accionesDe(reserva: Reserva): AccionesReserva {
     if (this.pestanaActiva() === 'por-aprobar') {
-      return { cancelar: false, transferir: false, aprobar: true, rechazar: true };
+      return { cancelar: false, transferir: false, aprobar: reserva.puede_aprobar, rechazar: true };
     }
     const activa = this.pestanaActiva() === 'activas';
     return {
