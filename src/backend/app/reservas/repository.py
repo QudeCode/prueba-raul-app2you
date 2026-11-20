@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.common.enums import EstadoReserva
 from app.database import get_session
+from app.recursos.entity import Recurso
 from app.reservas.entity import Reserva
 
 # Solo las activas ocupan el recurso (reglas de negocio, «Reserva activa»)
@@ -25,6 +26,10 @@ def _con_relaciones(consulta: Select[tuple[Reserva]]) -> Select[tuple[Reserva]]:
 class ReservaRepository:
     def __init__(self, session: Session):
         self.session = session
+
+    def obtener(self, reserva_id: int) -> Reserva | None:
+        consulta = _con_relaciones(select(Reserva).where(Reserva.id == reserva_id))
+        return self.session.scalars(consulta).first()
 
     def activas_del_dia(self, recurso_id: int, fecha: date) -> list[Reserva]:
         consulta = _con_relaciones(
@@ -50,6 +55,17 @@ class ReservaRepository:
             .order_by(Reserva.fecha)
         )
         return [(fecha, total) for fecha, total in self.session.execute(consulta)]
+
+    def bloquear_recurso(self, recurso_id: int) -> None:
+        """Serializa las reservas de un recurso hasta el commit (decisión 0013)."""
+        self.session.execute(select(Recurso.id).where(Recurso.id == recurso_id).with_for_update())
+
+    def guardar(self, reserva: Reserva) -> None:
+        self.session.add(reserva)
+        self.session.flush()
+
+    def confirmar(self) -> None:
+        self.session.commit()
 
 
 def get_reserva_repository(session: Annotated[Session, Depends(get_session)]) -> ReservaRepository:

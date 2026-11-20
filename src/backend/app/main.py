@@ -43,4 +43,5 @@ def manejar_error_dominio(_: Request, error: ErrorDominio) -> JSONResponse:
 
 app.include_router(usuarios_controller.router)
 app.include_router(recursos_controller.router)
+app.include_router(reservas_controller.router)
 app.include_router(reservas_controller.router_disponibilidad)

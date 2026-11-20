@@ -1,11 +1,16 @@
-import { httpResource } from '@angular/common/http';
-import { Injectable, Signal } from '@angular/core';
+import { HttpClient, httpResource } from '@angular/common/http';
+import { inject, Injectable, Signal } from '@angular/core';
+import { Observable, throwError } from 'rxjs';
 import { API_URL } from '../common/api';
-import { DiaOcupado, Disponibilidad } from './reserva.model';
+import { UsuariosService } from '../usuarios/usuarios.service';
+import { DiaOcupado, Disponibilidad, Reserva, ReservaNueva } from './reserva.model';
 
 /** Único conocedor de la API de reservas y disponibilidad (decisión 0008). */
 @Injectable({ providedIn: 'root' })
 export class ReservasService {
+  private readonly http = inject(HttpClient);
+  private readonly usuarios = inject(UsuariosService);
+
   disponibilidad(recursoId: Signal<number | null>, fecha: Signal<string | null>) {
     return httpResource<Disponibilidad>(() => {
       const id = recursoId();
@@ -28,5 +33,23 @@ export class ReservasService {
         params: { recurso_id: id, anio, mes: numero },
       };
     });
+  }
+
+  crear(nueva: ReservaNueva): Observable<Reserva> {
+    return this.accion('', nueva);
+  }
+
+  /** Cabecera del usuario actual (decisión 0011); `null` mientras no hay usuario. */
+  private cabeceras(): Record<string, string> | null {
+    const id = this.usuarios.actualId();
+    return id === null ? null : { 'X-Usuario-Id': String(id) };
+  }
+
+  private accion(ruta: string, cuerpo?: object): Observable<Reserva> {
+    const headers = this.cabeceras();
+    if (!headers) {
+      return throwError(() => new Error('No hay usuario seleccionado.'));
+    }
+    return this.http.post<Reserva>(`${API_URL}/reservas${ruta}`, cuerpo ?? null, { headers });
   }
 }

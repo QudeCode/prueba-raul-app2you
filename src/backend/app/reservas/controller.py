@@ -1,13 +1,26 @@
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 
-from app.reservas.dto import DiaOcupadoRespuesta, DisponibilidadRespuesta
-from app.reservas.service import DisponibilidadService, get_disponibilidad_service
+from app.reservas.dto import (
+    DiaOcupadoRespuesta,
+    DisponibilidadRespuesta,
+    ReservaPeticion,
+    ReservaRespuesta,
+)
+from app.reservas.service import (
+    DisponibilidadService,
+    ReservaService,
+    get_disponibilidad_service,
+    get_reserva_service,
+)
+from app.usuarios.controller import UsuarioActual
 
+router = APIRouter(prefix="/reservas", tags=["reservas"])
 router_disponibilidad = APIRouter(prefix="/disponibilidad", tags=["disponibilidad"])
 
+Reservas = Annotated[ReservaService, Depends(get_reserva_service)]
 Disponibilidad = Annotated[DisponibilidadService, Depends(get_disponibilidad_service)]
 
 
@@ -24,3 +37,8 @@ def resumen_mes(
     mes: Annotated[int, Query(ge=1, le=12)],
 ) -> list[DiaOcupadoRespuesta]:
     return service.resumen_mes(recurso_id, anio, mes)
+
+
+@router.post("", status_code=status.HTTP_201_CREATED)
+def crear(service: Reservas, usuario: UsuarioActual, peticion: ReservaPeticion) -> ReservaRespuesta:
+    return service.crear(peticion, usuario)

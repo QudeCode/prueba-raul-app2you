@@ -21,6 +21,12 @@ class Reserva(Base):
         CheckConstraint("hora_inicio < hora_fin", name="ck_reserva_horas_orden"),
         # Regla 2: TIME admite 24:00 en PostgreSQL, pero Python no puede leerlo (decisión 0004)
         CheckConstraint("hora_fin <= '23:59'", name="ck_reserva_hora_fin_maxima"),
+        # Regla 2: las horas van en minutos, sin segundos
+        CheckConstraint(
+            "(hora_inicio IS NULL OR EXTRACT(SECOND FROM hora_inicio) = 0)"
+            " AND (hora_fin IS NULL OR EXTRACT(SECOND FROM hora_fin) = 0)",
+            name="ck_reserva_horas_en_minutos",
+        ),
         CheckConstraint(
             "asistentes_sala IS NULL OR asistentes_sala >= 1", name="ck_reserva_asistentes"
         ),

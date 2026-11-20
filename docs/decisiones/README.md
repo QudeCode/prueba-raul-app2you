@@ -13,4 +13,5 @@
 | [0009](0009-estado-en-la-url-y-filtrado-en-cliente.md) | Estado de la vista en la URL y filtrado en el cliente | aceptada |
 | [0010](0010-estilos-scss-y-variables-css.md) | Estilos con SCSS y variables CSS | aceptada |
 | [0011](0011-usuario-actual-sin-login.md) | Usuario actual sin login: cabecera `X-Usuario-Id` | aceptada |
+| [0012](0012-api-de-reservas-y-errores.md) | API de reservas y errores del dominio | aceptada |
 | [0013](0013-disponibilidad-por-tramos.md) | Disponibilidad por tramos y reservas serializadas | aceptada · ADR |

@@ -67,6 +67,7 @@ npm start
 ## Uso
 
 - **Usuario actual:** no hay login. Se elige en el selector de la cabecera: Ana y Luis son trabajadores (sus reservas quedan pendientes) y Marta y Jordi, responsables (las suyas quedan aprobadas y pueden aprobar o rechazar las pendientes).
+- **API:** en http://localhost:8000/docs. Los endpoints de reservas piden la cabecera `X-Usuario-Id` con el id del usuario (1 Ana, 2 Luis, 3 Marta, 4 Jordi).
 
 ## Estructura
 

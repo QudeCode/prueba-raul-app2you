@@ -8,6 +8,17 @@ from app.recursos.dto import RecursoRespuesta
 from app.usuarios.dto import UsuarioRespuesta
 
 
+class ReservaPeticion(BaseModel):
+    """Sin horas es día completo; con las dos, por horas (decisión 0012)."""
+
+    recurso_id: int
+    fecha: date
+    hora_inicio: HoraMinuto | None = None
+    hora_fin: HoraMinuto | None = None
+    # Sin `ge`: la regla 4 la valida el servicio (400)
+    asistentes_sala: int | None = None
+
+
 class ReservaRespuesta(BaseModel):
     id: int
     recurso: RecursoRespuesta

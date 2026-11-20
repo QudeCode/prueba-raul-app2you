@@ -12,8 +12,28 @@
     </div>
   } @else if (dat === null) {
     <p class="estado" role="status">Cargando disponibilidad…</p>
-  } @else {
+  } @else if (soloConsulta()) {
     <h3>Reservas del día</h3>
     <app-reservas-del-dia [reservas]="dat.reservas" />
+  } @else {
+    <div class="todo-el-dia" [attr.data-libre]="dat.dia_completo_libre === false ? 'false' : 'true'">
+      <strong>Todo el día</strong>
+      @if (dat.dia_completo_libre === false) {
+        <span>Ocupado por:</span>
+        <app-reservas-del-dia [reservas]="dat.reservas" />
+      } @else {
+        <span>Libre</span>
+      }
+    </div>
+
+    @if (motivo(); as texto) {
+      <p id="motivo-reserva" class="motivo" role="status">{{ texto }}</p>
+    }
+    @if (error(); as texto) {
+      <p class="error" role="alert">{{ texto }}</p>
+    }
+    <button type="button" [disabled]="motivo() !== null || enviando()" (click)="confirmarReserva()">
+      {{ enviando() ? 'Reservando…' : 'Confirmar reserva' }}
+    </button>
   }
 </app-dialogo>

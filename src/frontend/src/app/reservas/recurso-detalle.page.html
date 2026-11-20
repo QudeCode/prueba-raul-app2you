@@ -10,14 +10,18 @@
 } @else if (!recursos.hasValue()) {
   <p class="estado" role="status">Cargando recurso…</p>
 } @else if (recurso(); as r) {
-  <span class="etiqueta-seccion">Disponibilidad</span>
+  <span class="etiqueta-seccion">Reservar</span>
   <h1>{{ r.nombre }}</h1>
+
+  @if (aviso(); as texto) {
+    <p class="exito" role="status">{{ texto }}</p>
+  }
 
   <div class="columnas">
     <app-recurso-card [recurso]="r" [enlazar]="false" />
 
     <section class="calendario" aria-labelledby="titulo-calendario">
-      <h2 id="titulo-calendario">Elige un día</h2>
+      <h2 id="titulo-calendario">Elige un día para reservar</h2>
       @if (mesReservas.error()) {
         <div class="aviso" role="alert">
           <p>No se pudo cargar la ocupación del mes.</p>
@@ -40,8 +44,13 @@
 
   @if (fechaActiva(); as f) {
     <app-reserva-modal
+      [recurso]="r"
       [fecha]="f"
+      [ahora]="ahora()"
       [disponibilidad]="disponibilidad"
+      [enviando]="enviando()"
+      [error]="errorReserva()"
+      (confirmar)="reservar($event)"
       (cerrar)="cerrarModal()"
     >
       <app-navegacion-dia

@@ -1,12 +1,13 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { mensajeDeError } from '../common/api';
 import { ahoraPorMinuto } from '../common/reloj';
 import { claveDia, claveMes, esClaveDia, esClaveMes } from '../common/fechas';
 import { RecursoCard } from '../recursos/recurso-card/recurso-card';
 import { RecursosService } from '../recursos/recursos.service';
 import { Calendario } from './calendario/calendario';
 import { NavegacionDia } from './navegacion-dia/navegacion-dia';
-import { primerDiaElegible, soloDiaCompleto } from './reserva.model';
+import { primerDiaElegible, ReservaNueva, soloDiaCompleto } from './reserva.model';
 import { ReservaModal } from './reserva-modal/reserva-modal';
 import { ReservasService } from './reservas.service';
 
@@ -78,7 +79,20 @@ export class RecursoDetallePage {
     return r !== undefined && soloDiaCompleto(r);
   });
 
+  protected readonly enviando = signal(false);
+  protected readonly errorReserva = signal<string | null>(null);
+  protected readonly aviso = signal<string | null>(null);
+
+  constructor() {
+    // El error de la API es del día en el que se produjo
+    effect(() => {
+      this.fechaActiva();
+      untracked(() => this.errorReserva.set(null));
+    });
+  }
+
   protected elegirDia(fecha: string): void {
+    this.aviso.set(null);
     this.irA({ fecha, mes: claveMes(fecha) });
   }
 
@@ -88,6 +102,30 @@ export class RecursoDetallePage {
 
   protected cerrarModal(): void {
     this.irA({ fecha: null });
+  }
+
+  protected reservar(nueva: ReservaNueva): void {
+    this.enviando.set(true);
+    this.errorReserva.set(null);
+    this.reservas.crear(nueva).subscribe({
+      next: (reserva) => {
+        this.enviando.set(false);
+        this.aviso.set(
+          reserva.estado === 'APROBADA'
+            ? 'Reserva creada y aprobada.'
+            : 'Reserva creada: pendiente de aprobación.',
+        );
+        this.cerrarModal();
+        this.mesReservas.reload();
+        this.disponibilidad.reload();
+      },
+      error: (error: unknown) => {
+        this.enviando.set(false);
+        this.errorReserva.set(mensajeDeError(error));
+        // El día ha podido cambiar desde que se abrió el modal
+        this.disponibilidad.reload();
+      },
+    });
   }
 
   private irA(queryParams: Record<string, string | null>): void {

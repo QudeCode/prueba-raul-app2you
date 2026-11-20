@@ -7,7 +7,26 @@ h3 {
   font-size: 1rem;
 }
 
-.estado {
+.estado,
+.motivo {
   margin: 0;
   color: var(--color-texto-suave);
+}
+
+.todo-el-dia {
+  display: grid;
+  gap: var(--espacio-1);
+  padding: var(--espacio-2);
+  border: 1px solid var(--color-borde-fuerte);
+  border-radius: var(--radio);
+
+  &[data-libre='true'] span {
+    color: var(--color-libre);
+    font-weight: 600;
+  }
+
+  &[data-libre='false'] span {
+    color: var(--color-ocupado);
+    font-weight: 600;
+  }
 }
