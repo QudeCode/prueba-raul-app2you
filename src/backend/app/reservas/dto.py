@@ -19,6 +19,10 @@ class ReservaPeticion(BaseModel):
     asistentes_sala: int | None = None
 
 
+class TransferenciaPeticion(BaseModel):
+    nuevo_titular_id: int
+
+
 class ReservaRespuesta(BaseModel):
     id: int
     recurso: RecursoRespuesta
@@ -30,6 +34,9 @@ class ReservaRespuesta(BaseModel):
     asistentes_sala: int | None
     estado: EstadoReserva
     creada_en: datetime
+    # Estado activo y dentro del plazo de la política al construir la respuesta; no comprueban el titular
+    puede_cancelar: bool
+    puede_transferir: bool
 
 
 class FranjaRespuesta(BaseModel):

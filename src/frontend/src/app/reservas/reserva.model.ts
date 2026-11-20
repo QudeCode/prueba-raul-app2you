@@ -17,6 +17,8 @@ export interface Reserva {
   asistentes_sala: number | null;
   estado: EstadoReserva;
   creada_en: string;
+  puede_cancelar: boolean;
+  puede_transferir: boolean;
 }
 
 export interface Franja {

@@ -1,12 +1,12 @@
 import calendar
 from collections.abc import Callable
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from typing import Annotated
 
 from fastapi import Depends
 
-from app.common.enums import EstadoReserva, ModalidadReserva, Rol
-from app.common.errores import Conflicto, ReglaIncumplida
+from app.common.enums import EstadoReserva, ModalidadReserva, PoliticaCancelacion, Rol
+from app.common.errores import Conflicto, NoEncontrado, NoPermitido, ReglaIncumplida
 from app.common.horas import FIN_DIA, INICIO_DIA, formato_hora
 from app.recursos.dto import RecursoRespuesta, SalaReunionRespuesta
 from app.recursos.service import RecursoService, get_recurso_service
@@ -18,7 +18,7 @@ from app.reservas.dto import (
     ReservaRespuesta,
 )
 from app.reservas.entity import Reserva
-from app.reservas.repository import ReservaRepository, get_reserva_repository
+from app.reservas.repository import ESTADOS_ACTIVOS, ReservaRepository, get_reserva_repository
 from app.usuarios.dto import UsuarioRespuesta
 from app.usuarios.service import UsuarioService, get_usuario_service
 
@@ -59,6 +59,26 @@ def inicio_de(fecha: date, hora_inicio: time | None) -> datetime:
     return datetime.combine(fecha, hora_inicio or INICIO_DIA)
 
 
+def puede_cancelar(politica: PoliticaCancelacion, inicio: datetime, ahora: datetime) -> bool:
+    """Regla 15: Flexible hasta 1 h antes; Moderada hasta 24 h antes; Bloqueada, nunca."""
+    match politica:
+        case PoliticaCancelacion.FLEXIBLE:
+            return ahora <= inicio - timedelta(hours=1)
+        case PoliticaCancelacion.MODERADA:
+            return ahora <= inicio - timedelta(hours=24)
+    return False
+
+
+def puede_transferir(politica: PoliticaCancelacion, inicio: datetime, ahora: datetime) -> bool:
+    """Reglas 15 y 19: Flexible hasta el inicio; Moderada desde 24 h antes hasta el inicio."""
+    match politica:
+        case PoliticaCancelacion.FLEXIBLE:
+            return ahora < inicio
+        case PoliticaCancelacion.MODERADA:
+            return inicio - timedelta(hours=24) < ahora < inicio
+    return False
+
+
 def capacidad_compartida(recurso: RecursoRespuesta) -> int | None:
     """La capacidad de una sala con aforo compartido (regla 6); None en el resto de recursos."""
     if isinstance(recurso, SalaReunionRespuesta) and recurso.aforo_compartido:
@@ -71,7 +91,10 @@ def ocupacion(reserva: Reserva, aforo: bool) -> int:
     return (reserva.asistentes_sala or 0) if aforo else 1
 
 
-def reserva_a_respuesta(reserva: Reserva) -> ReservaRespuesta:
+def reserva_a_respuesta(reserva: Reserva, ahora: datetime) -> ReservaRespuesta:
+    activa = reserva.estado in ESTADOS_ACTIVOS
+    politica = reserva.recurso.politica_cancelacion
+    inicio = inicio_de(reserva.fecha, reserva.hora_inicio)
     return ReservaRespuesta(
         id=reserva.id,
         recurso=RecursoService.a_respuesta(reserva.recurso),
@@ -85,6 +108,8 @@ def reserva_a_respuesta(reserva: Reserva) -> ReservaRespuesta:
         asistentes_sala=reserva.asistentes_sala,
         estado=reserva.estado,
         creada_en=reserva.creada_en,
+        puede_cancelar=activa and puede_cancelar(politica, inicio, ahora),
+        puede_transferir=activa and puede_transferir(politica, inicio, ahora),
     )
 
 
@@ -98,6 +123,21 @@ def describir(reserva: Reserva) -> str:
     return f"{cuando} de {titular} ({reserva.estado.lower()})"
 
 
+MOTIVO_SIN_CANCELAR = {
+    PoliticaCancelacion.FLEXIBLE: "Con la política flexible solo se cancela hasta 1 h antes del inicio",
+    PoliticaCancelacion.MODERADA: "Con la política moderada solo se cancela hasta 24 h antes del inicio",
+    PoliticaCancelacion.BLOQUEADA: "La política bloqueada no permite cancelar",
+}
+
+MOTIVO_SIN_TRANSFERIR = {
+    PoliticaCancelacion.FLEXIBLE: "Con la política flexible solo se transfiere hasta el inicio",
+    PoliticaCancelacion.MODERADA: (
+        "Con la política moderada solo se transfiere desde 24 h antes del inicio hasta el inicio"
+    ),
+    PoliticaCancelacion.BLOQUEADA: "La política bloqueada no permite transferir",
+}
+
+
 # --- Servicios ---
 
 
@@ -106,14 +146,17 @@ class DisponibilidadService:
         self,
         repositorio: ReservaRepository,
         recursos: RecursoService,
+        reloj: Reloj = datetime.now,
     ):
         self.repositorio = repositorio
         self.recursos = recursos
+        self.reloj = reloj
 
     def consultar(self, recurso_id: int, fecha: date) -> DisponibilidadRespuesta:
         """Regla 20. No recorta el pasado: eso lo decide quien consulta (y crear, regla 3)."""
         recurso = self.recursos.obtener(recurso_id)
         reservas = self.repositorio.activas_del_dia(recurso_id, fecha)
+        ahora = self.reloj()
 
         franjas = None
         if recurso.modalidad_reserva in POR_HORAS:
@@ -124,7 +167,7 @@ class DisponibilidadService:
         return DisponibilidadRespuesta(
             recurso_id=recurso_id,
             fecha=fecha,
-            reservas=[reserva_a_respuesta(reserva) for reserva in reservas],
+            reservas=[reserva_a_respuesta(reserva, ahora) for reserva in reservas],
             franjas=franjas,
             dia_completo_libre=(not reservas) if recurso.modalidad_reserva in DIA_COMPLETO else None,
         )
@@ -226,8 +269,37 @@ class ReservaService:
         self.repositorio.guardar(reserva)
         return self._confirmar(reserva.id)
 
+    def cancelar(self, reserva_id: int, usuario: UsuarioRespuesta) -> ReservaRespuesta:
+        """Reglas 13 a 16."""
+        reserva = self._para_actualizar(reserva_id)
+        self._exigir_titular(reserva, usuario, "cancelar")
+        self._exigir_activa(reserva, "cancelar")
+        politica = reserva.recurso.politica_cancelacion
+        if not puede_cancelar(politica, inicio_de(reserva.fecha, reserva.hora_inicio), self.reloj()):
+            raise Conflicto(MOTIVO_SIN_CANCELAR[politica])
+        reserva.estado = EstadoReserva.CANCELADA
+        return self._confirmar(reserva.id)
+
+    def transferir(
+        self, reserva_id: int, nuevo_titular_id: int, usuario: UsuarioRespuesta
+    ) -> ReservaRespuesta:
+        """Reglas 13 a 15 y 17 a 19: solo cambia el titular; el estado se mantiene."""
+        reserva = self._para_actualizar(reserva_id)
+        self.usuarios.obtener(nuevo_titular_id)
+        self._exigir_titular(reserva, usuario, "transferir")
+        if nuevo_titular_id == reserva.titular_id:
+            raise ReglaIncumplida("No se puede transferir una reserva a su propio titular")
+        self._exigir_activa(reserva, "transferir")
+        politica = reserva.recurso.politica_cancelacion
+        inicio = inicio_de(reserva.fecha, reserva.hora_inicio)
+        if not puede_transferir(politica, inicio, self.reloj()):
+            raise Conflicto(MOTIVO_SIN_TRANSFERIR[politica])
+        reserva.titular_id = nuevo_titular_id
+        return self._confirmar(reserva.id)
+
     def mias(self, usuario: UsuarioRespuesta) -> list[ReservaRespuesta]:
-        return [reserva_a_respuesta(r) for r in self.repositorio.de_titular(usuario.id)]
+        ahora = self.reloj()
+        return [reserva_a_respuesta(r, ahora) for r in self.repositorio.de_titular(usuario.id)]
 
     def _validar(self, peticion: ReservaPeticion, recurso: RecursoRespuesta) -> tuple[time, time]:
         """Reglas 2, 3 y 4. Devuelve la franja de la reserva."""
@@ -257,12 +329,30 @@ class ReservaService:
 
         return franja_de(hora_inicio, hora_fin)
 
+    def _para_actualizar(self, reserva_id: int) -> Reserva:
+        reserva = self.repositorio.obtener_para_actualizar(reserva_id)
+        if reserva is None:
+            raise NoEncontrado(f"No existe la reserva {reserva_id}")
+        return reserva
+
+    @staticmethod
+    def _exigir_titular(reserva: Reserva, usuario: UsuarioRespuesta, accion: str) -> None:
+        if reserva.titular_id != usuario.id:
+            raise NoPermitido(f"Solo el titular puede {accion} la reserva")
+
+    @staticmethod
+    def _exigir_activa(reserva: Reserva, accion: str) -> None:
+        if reserva.estado not in ESTADOS_ACTIVOS:
+            raise Conflicto(
+                f"Solo se pueden {accion} reservas activas; esta está {reserva.estado.lower()}"
+            )
+
     def _confirmar(self, reserva_id: int) -> ReservaRespuesta:
         """Confirma y relee la reserva, para que `creada_en` y las relaciones estén cargados."""
         self.repositorio.confirmar()
         reserva = self.repositorio.obtener(reserva_id)
         assert reserva is not None
-        return reserva_a_respuesta(reserva)
+        return reserva_a_respuesta(reserva, self.reloj())
 
 
 def get_disponibilidad_service(

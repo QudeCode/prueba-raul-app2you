@@ -45,6 +45,14 @@ export class ReservasService {
     return this.accion('', nueva);
   }
 
+  cancelar(id: number): Observable<Reserva> {
+    return this.accion(`/${id}/cancelar`);
+  }
+
+  transferir(id: number, nuevoTitularId: number): Observable<Reserva> {
+    return this.accion(`/${id}/transferir`, { nuevo_titular_id: nuevoTitularId });
+  }
+
   /** Cabecera del usuario actual (decisión 0011); `null` mientras no hay usuario. */
   private cabeceras(): Record<string, string> | null {
     const id = this.usuarios.actualId();

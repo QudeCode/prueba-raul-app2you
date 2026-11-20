@@ -1,0 +1,23 @@
+:host {
+  display: contents;
+}
+
+p {
+  margin: 0;
+}
+
+.resumen {
+  color: var(--color-texto-suave);
+}
+
+.campo {
+  display: grid;
+  gap: 0.25rem;
+  font-weight: 600;
+}
+
+.botones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--espacio-1);
+}

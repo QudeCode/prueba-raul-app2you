@@ -64,3 +64,17 @@
     text-transform: uppercase;
   }
 }
+
+.pie {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espacio-1);
+  margin-top: auto;
+  padding-top: var(--espacio-2);
+
+  // El enlace de la cabecera cubre la tarjeta: los botones quedan por encima
+  button {
+    position: relative;
+    z-index: 1;
+  }
+}

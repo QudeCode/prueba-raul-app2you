@@ -34,4 +34,31 @@
       </div>
     }
   </dl>
+
+  @if (hayAcciones()) {
+    <footer class="pie">
+      @if (acciones().transferir) {
+        <button
+          type="button"
+          class="boton-secundario"
+          [disabled]="ocupada()"
+          [attr.aria-label]="contexto('Transferir')"
+          (click)="transferir.emit()"
+        >
+          Transferir
+        </button>
+      }
+      @if (acciones().cancelar) {
+        <button
+          type="button"
+          class="boton-peligro"
+          [disabled]="ocupada()"
+          [attr.aria-label]="contexto('Cancelar')"
+          (click)="cancelar.emit()"
+        >
+          Cancelar
+        </button>
+      }
+    </footer>
+  }
 </article>

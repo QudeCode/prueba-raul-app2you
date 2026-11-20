@@ -1,5 +1,5 @@
 <span class="etiqueta-seccion">Mis reservas</span>
-<h1>Reservas</h1>
+<h1 #titulo tabindex="-1">Reservas</h1>
 
 <nav class="pestanas" aria-label="Estado de las reservas">
   <a
@@ -17,6 +17,15 @@
     >Pasadas ({{ cuentas().pasadas }})</a
   >
 </nav>
+
+<div role="status" aria-live="polite">
+  @if (mensaje(); as texto) {
+    <p class="exito">{{ texto }}</p>
+  }
+</div>
+@if (!dialogo() && error(); as texto) {
+  <p class="aviso" role="alert">{{ texto }}</p>
+}
 
 @let f = fuente();
 @if (usuariosService.actual() === null) {
@@ -38,8 +47,26 @@
   <ul class="rejilla">
     @for (r of visibles(); track r.id) {
       <li>
-        <app-reserva-card [reserva]="r" />
+        <app-reserva-card
+          [reserva]="r"
+          [acciones]="accionesDe(r)"
+          [ocupada]="accionando()"
+          (cancelar)="abrirDialogo('cancelar', r)"
+          (transferir)="abrirDialogo('transferir', r)"
+        />
       </li>
     }
   </ul>
+}
+
+@if (dialogo(); as d) {
+  <app-accion-dialogo
+    [accion]="d.accion"
+    [reserva]="d.reserva"
+    [usuarios]="usuariosService.usuarios.hasValue() ? usuariosService.usuarios.value() : []"
+    [enviando]="accionando()"
+    [error]="error()"
+    (confirmar)="confirmarDialogo($event)"
+    (cerrar)="cerrarDialogo()"
+  />
 }

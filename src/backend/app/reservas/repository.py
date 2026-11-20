@@ -31,6 +31,16 @@ class ReservaRepository:
         consulta = _con_relaciones(select(Reserva).where(Reserva.id == reserva_id))
         return self.session.scalars(consulta).first()
 
+    def obtener_para_actualizar(self, reserva_id: int) -> Reserva | None:
+        """Bloquea la fila hasta el commit: dos acciones sobre la misma reserva van una tras otra (decisión 0013)."""
+        consulta = (
+            select(Reserva)
+            .where(Reserva.id == reserva_id)
+            .with_for_update(of=Reserva)
+            .execution_options(populate_existing=True)
+        )
+        return self.session.scalars(consulta).first()
+
     def activas_del_dia(self, recurso_id: int, fecha: date) -> list[Reserva]:
         consulta = _con_relaciones(
             select(Reserva)

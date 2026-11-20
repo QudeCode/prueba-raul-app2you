@@ -112,7 +112,7 @@ button {
     cursor: default;
   }
 
-  // Variante de contorno para acciones secundarias
+  // Variantes: contorno para acciones secundarias y rojo para las destructivas
   &.boton-secundario {
     border: 1px solid var(--color-marca-oscuro);
     background: transparent;
@@ -120,6 +120,14 @@ button {
 
     &:hover:not(:disabled) {
       background: var(--color-fondo);
+    }
+  }
+
+  &.boton-peligro {
+    background: var(--color-error);
+
+    &:hover:not(:disabled) {
+      background: #b91c1c;
     }
   }
 }

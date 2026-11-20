@@ -1,0 +1,42 @@
+@let r = reserva();
+<app-dialogo [titulo]="titulo[accion()]" (cerrar)="cerrar.emit()">
+  <p class="resumen">
+    {{ r.recurso.nombre }} · {{ formatoDiaLargo(r.fecha, true) }} · {{ textoHoras(r) }}
+  </p>
+
+  @if (accion() === 'cancelar') {
+    <p>¿Cancelar la reserva de {{ r.recurso.nombre }} el {{ formatoDiaLargo(r.fecha, true) }}?</p>
+  } @else {
+    <label class="campo">
+      Nuevo titular
+      <select #sel (change)="elegir(+sel.value)">
+        @for (u of candidatos(); track u.id) {
+          <option [value]="u.id" [selected]="u.id === destino()">{{ nombreCompleto(u) }}</option>
+        }
+      </select>
+    </label>
+  }
+
+  @if (error(); as texto) {
+    <p class="error" role="alert">{{ texto }}</p>
+  }
+
+  <div class="botones">
+    <button
+      type="button"
+      class="boton-secundario"
+      [attr.autofocus]="accion() === 'transferir' ? null : ''"
+      (click)="cerrar.emit()"
+    >
+      Volver
+    </button>
+    <button
+      type="button"
+      [class.boton-peligro]="accion() !== 'transferir'"
+      [disabled]="enviando() || (accion() === 'transferir' && destino() === null)"
+      (click)="aceptar()"
+    >
+      {{ botonAceptar[accion()] }}
+    </button>
+  </div>
+</app-dialogo>

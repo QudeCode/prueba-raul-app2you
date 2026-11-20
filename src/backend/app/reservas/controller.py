@@ -8,6 +8,7 @@ from app.reservas.dto import (
     DisponibilidadRespuesta,
     ReservaPeticion,
     ReservaRespuesta,
+    TransferenciaPeticion,
 )
 from app.reservas.service import (
     DisponibilidadService,
@@ -47,3 +48,15 @@ def mias(service: Reservas, usuario: UsuarioActual) -> list[ReservaRespuesta]:
 @router.post("", status_code=status.HTTP_201_CREATED)
 def crear(service: Reservas, usuario: UsuarioActual, peticion: ReservaPeticion) -> ReservaRespuesta:
     return service.crear(peticion, usuario)
+
+
+@router.post("/{reserva_id}/cancelar")
+def cancelar(service: Reservas, usuario: UsuarioActual, reserva_id: int) -> ReservaRespuesta:
+    return service.cancelar(reserva_id, usuario)
+
+
+@router.post("/{reserva_id}/transferir")
+def transferir(
+    service: Reservas, usuario: UsuarioActual, reserva_id: int, peticion: TransferenciaPeticion
+) -> ReservaRespuesta:
+    return service.transferir(reserva_id, peticion.nuevo_titular_id, usuario)
