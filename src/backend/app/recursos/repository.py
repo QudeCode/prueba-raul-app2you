@@ -20,6 +20,10 @@ class RecursoRepository:
             consulta = consulta.where(Recurso.tipo == tipo)
         return list(self.session.scalars(consulta))
 
+    def obtener(self, recurso_id: int) -> Recurso | None:
+        """Devuelve el recurso como su subclase."""
+        return self.session.get(Recurso, recurso_id)
+
 
 def get_recurso_repository(session: Annotated[Session, Depends(get_session)]) -> RecursoRepository:
     return RecursoRepository(session)

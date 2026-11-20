@@ -2,7 +2,7 @@
 
 ## Conceptos
 - **Reserva activa**: reserva en estado `PENDIENTE` o `APROBADA`. Solo las activas ocupan el recurso; `RECHAZADA` y `CANCELADA` lo liberan.
-- **Franja de una reserva**: por horas, de `hora_inicio` a `hora_fin`; día completo, de 00:00 a 24:00 de su fecha.
+- **Franja de una reserva**: por horas, de `hora_inicio` a `hora_fin` (como muy tarde las 23:59); día completo, de 00:00 a 24:00 de su fecha.
 - **Solapamiento**: dos franjas del mismo día se solapan si `inicio1 < fin2` y `inicio2 < fin1`. Cubre solapes parciales, totales y una contenida en otra.
 - **Inicio de una reserva**: su fecha a la `hora_inicio`; en día completo, a las 00:00.
 
@@ -53,6 +53,6 @@
 ## Consultar disponibilidad
 20. Para un recurso y una fecha se devuelve:
    - Las reservas activas de ese día, con su estado (explican por qué no está disponible).
-   - Por horas: las franjas libres dentro del día (00:00–24:00).
+   - Por horas: las franjas libres dentro del día, de 00:00 a 23:59 (la hora de fin máxima, regla 2).
    - Día completo: si está disponible o no.
    - Con aforo compartido: la capacidad libre en cada franja.

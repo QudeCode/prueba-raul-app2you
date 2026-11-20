@@ -42,7 +42,7 @@
   Si un responsable quiere ese hueco: primero rechaza la pendiente, luego reserva.
 - Nuevo estado: Rechazada (un responsable rechaza una reserva pendiente).
 - Una reserva ocupa un único día (también los vehículos).
-- La disponibilidad por horas se calcula sobre el día entero (00:00–24:00), sin horario laboral.
+- La disponibilidad por horas se calcula sobre el día entero, sin horario laboral: de 00:00 a 23:59, la hora de fin máxima de una reserva por horas. El día completo ocupa de 00:00 a 24:00.
 - Política de cancelación (libre por cada recurso, independientemente del tipo):
   - Flexible: cancelar hasta 1h antes; transferir hasta el inicio.
   - Moderada: hasta 24h antes solo cancelar; pasado ese límite solo transferir (hasta el inicio).

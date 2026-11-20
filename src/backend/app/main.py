@@ -12,6 +12,7 @@ from app.common.errores import (
     ReglaIncumplida,
 )
 from app.recursos import controller as recursos_controller
+from app.reservas import controller as reservas_controller
 from app.usuarios import controller as usuarios_controller
 
 app = FastAPI()
@@ -42,3 +43,4 @@ def manejar_error_dominio(_: Request, error: ErrorDominio) -> JSONResponse:
 
 app.include_router(usuarios_controller.router)
 app.include_router(recursos_controller.router)
+app.include_router(reservas_controller.router_disponibilidad)

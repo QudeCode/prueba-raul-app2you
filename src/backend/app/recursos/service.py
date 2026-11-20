@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import Depends
 
 from app.common.enums import TipoRecurso
+from app.common.errores import NoEncontrado
 from app.recursos.dto import (
     EquipoRespuesta,
     RecursoRespuesta,
@@ -18,10 +19,16 @@ class RecursoService:
         self.repositorio = repositorio
 
     def listar(self, tipo: TipoRecurso | None = None) -> list[RecursoRespuesta]:
-        return [self._a_respuesta(recurso) for recurso in self.repositorio.listar(tipo)]
+        return [self.a_respuesta(recurso) for recurso in self.repositorio.listar(tipo)]
+
+    def obtener(self, recurso_id: int) -> RecursoRespuesta:
+        recurso = self.repositorio.obtener(recurso_id)
+        if recurso is None:
+            raise NoEncontrado(f"No existe el recurso {recurso_id}")
+        return self.a_respuesta(recurso)
 
     @staticmethod
-    def _a_respuesta(recurso: Recurso) -> RecursoRespuesta:
+    def a_respuesta(recurso: Recurso) -> RecursoRespuesta:
         """Construye el DTO de su tipo; modalidad e imagen salen de las constantes de clase (decisión 0005)."""
         comunes = dict(
             id=recurso.id,
