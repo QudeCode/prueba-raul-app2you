@@ -52,7 +52,7 @@ python -m app.seed               # crea las tablas y carga los datos de prueba (
 uvicorn app.main:app --reload
 ```
 
-> El seed necesita la base de datos arrancada y el `.env` copiado (apartado anterior). Carga 4 usuarios y 8 recursos, sin reservas, y se puede repetir para volver al estado inicial. Solo actúa sobre una base local: si la `DATABASE_URL` apunta a otra máquina, se niega a borrar nada.
+> El seed necesita la base de datos arrancada y el `.env` copiado (apartado anterior). Carga 4 usuarios, 8 recursos y reservas aleatorias de los próximos 21 días (creadas con las mismas reglas que la API), más unas pocas de los días anteriores. Se puede repetir para volver al estado inicial. Solo actúa sobre una base local: si la `DATABASE_URL` apunta a otra máquina, se niega a borrar nada.
 
 ### Frontend → http://localhost:4200
 
