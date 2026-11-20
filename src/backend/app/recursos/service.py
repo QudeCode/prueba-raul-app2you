@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
+from app.common.enums import TipoRecurso
 from app.recursos.dto import (
     EquipoRespuesta,
     RecursoRespuesta,
@@ -16,8 +17,8 @@ class RecursoService:
     def __init__(self, repositorio: RecursoRepository):
         self.repositorio = repositorio
 
-    def listar(self) -> list[RecursoRespuesta]:
-        return [self._a_respuesta(recurso) for recurso in self.repositorio.listar()]
+    def listar(self, tipo: TipoRecurso | None = None) -> list[RecursoRespuesta]:
+        return [self._a_respuesta(recurso) for recurso in self.repositorio.listar(tipo)]
 
     @staticmethod
     def _a_respuesta(recurso: Recurso) -> RecursoRespuesta:
