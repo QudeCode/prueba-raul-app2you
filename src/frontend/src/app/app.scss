@@ -1,0 +1,39 @@
+.cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--color-superficie);
+  border-bottom: 1px solid var(--color-borde);
+
+  // Línea superior con el degradado de marca
+  &::before {
+    content: '';
+    display: block;
+    height: 3px;
+    background: linear-gradient(to right, var(--color-marca-oscuro), var(--color-marca));
+  }
+
+  .contenedor {
+    padding-block: var(--espacio-3);
+  }
+}
+
+.marca {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-marca-oscuro);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+main {
+  padding-block: var(--espacio-4);
+
+  // Recibe el foco desde «Saltar al contenido», sin contorno propio
+  &:focus {
+    outline: none;
+  }
+}

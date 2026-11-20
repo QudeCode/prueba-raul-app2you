@@ -1,0 +1,48 @@
+<span class="etiqueta-seccion">Catálogo</span>
+<h1>Recursos</h1>
+
+<nav class="filtro" aria-label="Filtrar por tipo">
+  <a
+    routerLink="."
+    [queryParams]="{ tipo: null }"
+    queryParamsHandling="merge"
+    [attr.aria-current]="tipoActivo() === null ? 'page' : null"
+    >Todos
+    @if (recursos.hasValue()) {
+      ({{ catalogoTotal() }})
+    }
+  </a>
+  @for (t of tipos; track t) {
+    <a
+      routerLink="."
+      [queryParams]="{ tipo: t }"
+      queryParamsHandling="merge"
+      [attr.aria-current]="tipoActivo() === t ? 'page' : null"
+      >{{ plural[t] }}
+      @if (recursos.hasValue()) {
+        ({{ conteos()[t] }})
+      }
+    </a>
+  }
+</nav>
+
+@if (recursos.error()) {
+  <div class="aviso" role="alert">
+    <p>No se pudieron cargar los recursos. Comprueba que el backend está arrancado.</p>
+    <button type="button" (click)="recursos.reload()" [disabled]="recursos.isLoading()">
+      {{ recursos.isLoading() ? 'Reintentando…' : 'Reintentar' }}
+    </button>
+  </div>
+} @else if (recursos.isLoading() && !recursos.hasValue()) {
+  <p class="estado" role="status">Cargando recursos…</p>
+} @else if (visibles().length === 0) {
+  <p class="estado" role="status">
+    {{ tipoActivo() ? 'No hay recursos de este tipo.' : 'No hay recursos.' }}
+  </p>
+} @else {
+  <ul class="rejilla">
+    @for (r of visibles(); track r.id) {
+      <li><app-recurso-card [recurso]="r" /></li>
+    }
+  </ul>
+}

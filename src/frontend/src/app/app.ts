@@ -1,30 +1,16 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-
-const API = 'http://localhost:8000';
-
-// Comprobación provisional de que el frontend llega a cada GET del backend
-const RUTAS = ['/usuarios', '/recursos'];
+import { Component } from '@angular/core';
+import { RouterLink, RouterOutlet } from '@angular/router';
 
 @Component({
-  imports: [RouterOutlet],
+  imports: [RouterLink, RouterOutlet],
   selector: 'app-root',
   styleUrl: './app.scss',
   templateUrl: './app.html',
 })
 export class App {
-  protected readonly respuestas = signal<{ ruta: string; resultado: string }[]>([]);
-
-  constructor() {
-    Promise.all(
-      RUTAS.map(async (ruta) => {
-        try {
-          const respuesta = await fetch(API + ruta);
-          return { ruta, resultado: `${respuesta.status} ${await respuesta.text()}` };
-        } catch {
-          return { ruta, resultado: 'sin conexión con el backend' };
-        }
-      }),
-    ).then((respuestas) => this.respuestas.set(respuestas));
+  /** Con el router, un `href="#…"` navegaría a `/#…` y perdería la URL actual: solo se mueve el foco. */
+  protected saltarAlContenido(evento: Event): void {
+    evento.preventDefault();
+    document.getElementById('contenido')?.focus();
   }
 }

@@ -1,5 +1,11 @@
-@for (r of respuestas(); track r.ruta) {
-  <p>GET {{ r.ruta }} → {{ r.resultado }}</p>
-}
+<a class="saltar" href="#contenido" (click)="saltarAlContenido($event)">Saltar al contenido</a>
 
-<router-outlet />
+<header class="cabecera">
+  <div class="contenedor">
+    <a class="marca" routerLink="/recursos">Reservas</a>
+  </div>
+</header>
+
+<main id="contenido" class="contenedor" tabindex="-1">
+  <router-outlet />
+</main>

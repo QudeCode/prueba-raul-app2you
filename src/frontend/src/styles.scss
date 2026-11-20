@@ -1,1 +1,132 @@
-/* You can add global styles to this file, and also import other style files */
+// Variables de diseño (decisión 0010). Referencia visual: la web de app2u.
+
+:root {
+  // Marca. El azul claro no llega al contraste AA con texto: solo para decoración.
+  // Texto, botones y estados activos usan el azul oscuro (5,9:1 sobre blanco).
+  --color-marca: #3aabe3;
+  --color-marca-oscuro: #006b98;
+  --color-marca-hover: #005578;
+  --color-sobre-marca: #fff;
+
+  // Superficies y texto
+  --color-fondo: #f5f9fd;
+  --color-superficie: #fff;
+  --color-texto: #333;
+  --color-texto-suave: #555;
+  --color-borde: #eee;
+  --color-borde-fuerte: #ccc;
+  --color-error: #dc2626;
+  --color-error-fondo: #fef2f2;
+
+  // Un color por tipo de recurso, con contraste AA como texto sobre blanco
+  --color-tipo-sala: #006b98;
+  --color-tipo-vehiculo: #0f766e;
+  --color-tipo-equipo: #b45309;
+
+  // Espacios, radios y sombras
+  --espacio-1: 0.5rem;
+  --espacio-2: 1rem;
+  --espacio-3: 1.5rem;
+  --espacio-4: 2.5rem;
+  --radio: 12px;
+  --radio-boton: 4px;
+  --radio-pildora: 25px;
+  --sombra: 0 4px 20px #00000014;
+
+  --fuente:
+    Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--fuente);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-texto);
+  background: var(--color-fondo);
+}
+
+h1,
+h2 {
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 2rem;
+  color: var(--color-marca-oscuro);
+}
+
+// Contenedor centrado, como en la web de referencia
+.contenedor {
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: var(--espacio-3);
+}
+
+// Etiqueta de sección en mayúsculas sobre los títulos
+.etiqueta-seccion {
+  display: block;
+  margin-bottom: var(--espacio-1);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-marca-oscuro);
+}
+
+button {
+  padding: 0.625rem 1.5rem;
+  border: 0;
+  border-radius: var(--radio-boton);
+  background: var(--color-marca-oscuro);
+  color: var(--color-sobre-marca);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover:not(:disabled) {
+    background: var(--color-marca-hover);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-marca-oscuro);
+  outline-offset: 2px;
+}
+
+// Enlace para saltar la cabecera con el teclado: solo visible al recibir el foco
+.saltar {
+  position: absolute;
+  left: var(--espacio-2);
+  top: -100px;
+  z-index: 20;
+  padding: var(--espacio-1) var(--espacio-2);
+  border-radius: var(--radio-boton);
+  background: var(--color-marca-oscuro);
+  color: var(--color-sobre-marca);
+
+  &:focus {
+    top: var(--espacio-1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+  }
+}

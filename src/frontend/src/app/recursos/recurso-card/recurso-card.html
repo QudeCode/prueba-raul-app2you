@@ -1,0 +1,44 @@
+@let r = recurso();
+<article class="tarjeta" [attr.data-tipo]="r.tipo">
+  <!-- alt vacío: el tipo ya aparece como texto en la etiqueta -->
+  <img class="imagen" [src]="'/imagenes/recursos/' + r.imagen" alt="" width="96" height="96" />
+
+  <span class="tipo">{{ tipoLabel[r.tipo] }}</span>
+  <h2>{{ r.nombre }}</h2>
+  <p class="descripcion">{{ r.descripcion }}</p>
+
+  <dl class="datos">
+    <div>
+      <dt>Cancelación</dt>
+      <dd>{{ politicaLabel[r.politica_cancelacion] }}</dd>
+    </div>
+    <div>
+      <dt>Reserva</dt>
+      <dd>{{ modalidadLabel[r.modalidad_reserva] }}</dd>
+    </div>
+    @if (r.tipo === 'SALA_REUNION') {
+      <div>
+        <dt>Capacidad máxima</dt>
+        <dd>{{ r.capacidad_maxima }} personas</dd>
+      </div>
+      <div>
+        <dt>Aforo compartido</dt>
+        <dd>{{ r.aforo_compartido ? 'Sí' : 'No' }}</dd>
+      </div>
+    } @else if (r.tipo === 'VEHICULO') {
+      <div>
+        <dt>Matrícula</dt>
+        <dd>{{ r.matricula }}</dd>
+      </div>
+      <div>
+        <dt>Plazas</dt>
+        <dd>{{ r.plazas }}</dd>
+      </div>
+    } @else if (r.tipo === 'EQUIPO') {
+      <div>
+        <dt>Número de serie</dt>
+        <dd>{{ r.numero_serie }}</dd>
+      </div>
+    }
+  </dl>
+</article>

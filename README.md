@@ -62,6 +62,8 @@ npm install
 npm start
 ```
 
+> Con el backend arrancado, abre el listado de recursos (`/recursos`), con filtro por tipo. Las imágenes de cada tipo están en `src/frontend/public/imagenes/recursos/`.
+
 ## Estructura
 
 ```

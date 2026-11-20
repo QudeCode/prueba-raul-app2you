@@ -9,3 +9,6 @@
 | [0005](0005-herencia-recursos-tabla-unica.md) | Herencia de recursos en una sola tabla | aceptada |
 | [0006](0006-idioma-del-codigo.md) | Idioma del código | aceptada |
 | [0007](0007-postgresql-docker-compose.md) | PostgreSQL en Docker Compose | aceptada · ADR |
+| [0008](0008-estructura-y-datos-del-frontend.md) | Arquitectura del frontend: funcionalidades con capas ligeras | aceptada · ADR |
+| [0009](0009-estado-en-la-url-y-filtrado-en-cliente.md) | Estado de la vista en la URL y filtrado en el cliente | aceptada |
+| [0010](0010-estilos-scss-y-variables-css.md) | Estilos con SCSS y variables CSS | aceptada |
