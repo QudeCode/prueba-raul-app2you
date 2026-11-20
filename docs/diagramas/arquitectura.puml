@@ -1,0 +1,113 @@
+@startuml arquitectura
+title Arquitectura por capas - Reserva de Recursos
+
+skinparam linetype polyline
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+top to bottom direction
+
+skinparam component<<pendiente>> {
+  BackgroundColor #F5F5F5
+  BorderColor #9E9E9E
+  FontColor #757575
+  StereotypeFontColor #9E9E9E
+}
+
+package "FRONTEND · Angular" {
+  package "Presentación" as FP #E3F2FD {
+    [App (cabecera)] as App
+    [RecursosPage] as RecursosPage
+    [RecursoCard] as RecursoCard
+    [SelectorUsuario] <<pendiente>> as SelectorUsuario
+    [DisponibilidadPage] <<pendiente>> as DisponibilidadPage
+    [MisReservasPage] <<pendiente>> as MisReservasPage
+    [AprobacionesPage] <<pendiente>> as AprobacionesPage
+  }
+  package "Datos" as FD #BBDEFB {
+    [RecursosService] as RecursosService
+    [UsuariosService] <<pendiente>> as UsuariosService
+    [ReservasService] <<pendiente>> as ReservasService
+  }
+  package "Modelo del frontend" as FM #FFF8E1 {
+    [recurso.model] as RecursoModel
+    [common/enums] as EnumsFront
+    [reserva.model] <<pendiente>> as ReservaModel
+    [reglas de reserva] <<pendiente>> as ReglasFront
+  }
+}
+
+package "BACKEND · FastAPI" {
+  package "Controller" as BC #E8F5E9 {
+    [usuarios/controller] as UsuariosController
+    [recursos/controller] as RecursosController
+    [reservas/controller] <<pendiente>> as ReservasController
+    [usuario actual (X-Usuario-Id)] <<pendiente>> as UsuarioActual
+  }
+  package "Service" as BS #C8E6C9 {
+    [UsuarioService] as UsuarioService
+    [RecursoService] as RecursoService
+    [ReservaService] <<pendiente>> as ReservaService
+    [DisponibilidadService] <<pendiente>> as DisponibilidadService
+  }
+  package "Repository" as BR #A5D6A7 {
+    [UsuarioRepository] as UsuarioRepository
+    [RecursoRepository] as RecursoRepository
+    [ReservaRepository] <<pendiente>> as ReservaRepository
+  }
+  package "Modelo del backend" as BM #FFF8E1 {
+    [DTO (usuarios, recursos, reservas)] as DTO
+    [Entity (Usuario, Recurso, Reserva)] as Entity
+    [common/enums] as EnumsBack
+    [errores del dominio] <<pendiente>> as Errores
+  }
+}
+
+database "PostgreSQL · Docker Compose" as BD #ECEFF1 {
+  [usuario] as TUsuario
+  [recurso] as TRecurso
+  [reserva] as TReserva
+}
+
+App -down-> RecursosPage : router
+App -down-> DisponibilidadPage : router
+App -down-> MisReservasPage : router
+App -down-> AprobacionesPage : router
+App -right-> SelectorUsuario
+RecursosPage -right-> RecursoCard : input
+RecursosPage -down-> RecursosService : inject
+SelectorUsuario -down-> UsuariosService : inject
+DisponibilidadPage -down-> ReservasService : inject
+MisReservasPage -down-> ReservasService : inject
+AprobacionesPage -down-> ReservasService : inject
+
+RecursosService -down-> RecursosController : HTTP GET /recursos
+UsuariosService -down-> UsuariosController : HTTP GET /usuarios
+ReservasService -down-> ReservasController : HTTP /reservas, /disponibilidad (X-Usuario-Id)
+
+UsuariosController -down-> UsuarioService : Depends
+RecursosController -down-> RecursoService : Depends
+ReservasController -down-> ReservaService : Depends
+ReservasController -down-> DisponibilidadService : Depends
+ReservasController -right-> UsuarioActual : Depends
+UsuarioService -down-> UsuarioRepository : Depends
+RecursoService -down-> RecursoRepository : Depends
+ReservaService -down-> ReservaRepository : Depends
+DisponibilidadService -down-> ReservaRepository : Depends
+ReservaService -left-> RecursoService : llama
+UsuarioRepository -down-> BD : SQL
+RecursoRepository -down-> BD : SQL
+ReservaRepository -down-> BD : SQL
+
+FP .right.> FM : usa
+FD .right.> FM : usa
+
+BC .right.> DTO : usa
+BS .right.> DTO : usa
+BS .right.> Entity : usa
+BS .right.> Errores : lanza
+BR .right.> Entity : usa
+Entity .down.> BD : mapea
+
+@enduml

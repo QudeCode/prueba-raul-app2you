@@ -2,7 +2,7 @@
 
 Sistema de reservas de recursos empresariales (ver [enunciado](docs/enunciado.md)).
 
-Las reglas de negocio acordadas están en [docs/reglas_negocio.md](docs/reglas_negocio.md).
+Las reglas de negocio acordadas están en [docs/reglas_negocio.md](docs/reglas_negocio.md), la arquitectura por capas en [docs/diagramas/arquitectura.puml](docs/diagramas/arquitectura.puml) y las decisiones técnicas en [docs/decisiones/](docs/decisiones/README.md).
 
 | Capa     | Tecnología       | Carpeta         |
 |----------|------------------|-----------------|

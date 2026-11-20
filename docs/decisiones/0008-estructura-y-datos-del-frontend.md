@@ -20,19 +20,24 @@ src/app/
 └── reservas/        (futuro) igual que recursos
 ```
 
-### Tres capas, con las dependencias hacia dentro
-Las capas tienen la misma forma que las del backend (decisión 0001):
+### Dos capas de llamadas y un modelo compartido
+Tiene la misma forma que el backend (decisión 0001) y la dibuja `docs/diagramas/arquitectura.puml`. Hay que distinguir dos cosas:
 
-| Capa | Qué contiene | En el backend | Puede usar |
-|---|---|---|---|
-| Presentación | **Páginas contenedoras** (`recursos.page`): leen la URL, piden los datos al servicio y deciden qué estado mostrar. **Componentes presentacionales** (`recurso-card`): solo `input` y `output`. | controller | datos y dominio |
-| Datos | **Un servicio por funcionalidad** (`recursos.service`), el único que conoce la API: URL, parámetros y `httpResource`. | repository / cliente de la API | dominio |
-| Dominio | **Modelos, enums, etiquetas y reglas** en TypeScript puro, sin Angular. | entidades y reglas del service | nada |
+**La cadena de llamadas,** donde cada capa solo llama a la siguiente:
+
+| Capa | Qué contiene | Llama a |
+|---|---|---|
+| Presentación | **Páginas contenedoras** (`recursos.page`): leen la URL, piden los datos al servicio y deciden qué estado mostrar. **Componentes presentacionales** (`recurso-card`): solo `input` y `output`. | Datos |
+| Datos | **Un servicio por funcionalidad** (`recursos.service`), el único que conoce la API: URL, parámetros y `httpResource`. | la API (controller del backend) |
+
+En el backend la cadena sigue: controller → service → repository → base de datos, a través de la sesión de `get_session`.
+
+**El modelo,** que no es una capa de la cadena, sino el vocabulario que comparten las capas: los tipos que replican el contrato (`recurso.model`), los enums del dominio con sus etiquetas (`common/enums`) y, cuando haga falta, las reglas en funciones puras, sin Angular. Presentación y Datos lo usan directamente. Si tuviera que pasar capa a capa, el servicio tendría que reexportar tipos y etiquetas sin aportar nada. En el backend tienen ese papel los DTO, las entidades y `common/enums.py`.
 
 Reglas:
-- Un componente presentacional nunca inyecta servicios ni hace peticiones.
-- Una página nunca usa `HttpClient` directamente: pasa por el servicio de su funcionalidad.
-- La lógica de negocio que replique el frontend (por ejemplo, si una reserva se puede cancelar según su política) va en funciones puras del dominio, no en los componentes. El backend sigue siendo la autoridad: la interfaz solo evita ofrecer acciones que la API rechazaría.
+- Ninguna capa llama a otra saltándose la intermedia: un componente presentacional nunca inyecta servicios ni hace peticiones, y una página nunca usa `HttpClient`, sino el servicio de su funcionalidad.
+- El modelo no depende de nada: ni de Angular ni de las capas que lo usan.
+- La lógica de negocio que replique el frontend (por ejemplo, si una reserva se puede cancelar según su política) va en funciones puras del modelo, no en los componentes. El backend sigue siendo la autoridad: la interfaz solo evita ofrecer acciones que la API rechazaría.
 - Entre funcionalidades, las dependencias van en una sola dirección, la misma que en el backend: `reservas` puede usar el modelo de `recursos`, nunca al revés. Todas pueden usar `common`.
 - Lo que comparte más de una funcionalidad sube a `common/`. Los enums del dominio y sus etiquetas viven en `common/enums.ts`, como `app/common/enums.py` en el backend.
 
@@ -56,6 +61,7 @@ Reglas:
 ## Consecuencias
 - Una funcionalidad nueva repite la forma de `app/recursos/`, y se ve de un vistazo qué incluye.
 - Si el contrato de la API cambia, el modelo del frontend cambia igual.
+- La arquitectura por capas de que hablan esta decisión y la 0001 se ve en `docs/diagramas/arquitectura.puml`.
 - Las reglas de dependencia se cumplen por revisión (el contexto de los agentes las recoge), no por una herramienta.
 - **Cómo crecer, si hace falta:**
   - estado compartido complejo entre vistas → un SignalStore de NgRx por funcionalidad;
