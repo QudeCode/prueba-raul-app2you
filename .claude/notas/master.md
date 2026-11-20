@@ -1,6 +1,6 @@
 # master · Correcciones de la revisión
 
-Rama: master · Planes cerrados: [backend-bd-estructura](../plans/backend-bd-estructura.md), [frontend-recursos](../plans/frontend-recursos.md), [reservas](../plans/reservas.md)
+Rama: master · Plan en curso: [correcciones-revision](../plans/correcciones-revision.md) (implementado) · Planes cerrados: [backend-bd-estructura](../plans/backend-bd-estructura.md), [frontend-recursos](../plans/frontend-recursos.md), [reservas](../plans/reservas.md)
 
 ## Objetivo
 Repasar la aplicación contra el enunciado y corregir lo que se interpretó de otra forma (apartado «Pendiente»).
@@ -11,17 +11,14 @@ Repasar la aplicación contra el enunciado y corregir lo que se interpretó de o
 - **Reservas de punta a punta** (plan `reservas`): disponibilidad por día y por mes, crear, aprobar, rechazar, cancelar y transferir (decisiones 0011 a 0013); detalle del recurso con calendario y modal con timeline, y página «Reservas» con sus pestañas. Verificado con scripts temporales fuera del repo, `npm run build` y prueba del usuario en local.
 - **Datos de prueba** con reservas aleatorias creadas con las mismas reglas que la API.
 - **Documentación de arquitectura:** `docs/arquitectura.md` con los diagramas reducido y detallado, enlazada desde el README.
+- **Correcciones de la revisión** (plan `correcciones-revision`): interpretación de las políticas (0014); no se aprueban pendientes ya comenzadas (regla 21); rutas REST con la disponibilidad bajo el recurso (0015); un responsable reserva sobre pendientes y rechaza las que estorban (regla 8, 0016). Revisado con `dev:revisar-cambios` completo.
 
 ## Pendiente
-- Correcciones de la revisión del enunciado:
-  - regla 8: un responsable puede reservar aunque el recurso tenga reservas pendientes (punto 4 del enunciado);
-  - no aprobar reservas pendientes que ya han empezado;
-  - rutas REST: `GET /recursos/{id}`, `GET /reservas/{id}` y la disponibilidad bajo `/recursos/{id}`;
-  - decisión sobre la interpretación de las políticas de cancelación.
-- **Diferido de las revisiones:** el color por tipo en un solo sitio, un título de pestaña por ruta, `length=None` en `tipo_enum`, el `dict` sin tipar de `recursos/service.py`, `esActiva` que replica los estados activos, el CORS solo con `GET` y `POST` y las celdas del timeline solo con ratón.
+- Prueba del usuario en local de las correcciones (`python -m app.seed` antes): como Marta, reservar sobre una pendiente con el aviso previo y la lista de rechazadas; como Ana, la franja sigue ocupada; en «Por aprobar», una pendiente ya comenzada solo deja rechazar.
+- **Diferido de las revisiones:** el color por tipo en un solo sitio, un título de pestaña por ruta, `length=None` en `tipo_enum`, el `dict` sin tipar de `recursos/service.py`, `esActiva` que replica los estados activos, el CORS solo con `GET` y `POST`, las celdas del timeline solo con ratón, renombrar `comprobar_hueco` y construir `ReservaCreadaRespuesta` sin `dict`.
 
 ## Siguiente paso
-Plan de las correcciones de la revisión.
+Prueba en local y push al repositorio.
 
 ## Pantallas acordadas
 - **Detalle del recurso:** desde la tarjeta de `/recursos`, con un calendario mensual en el centro (recuento de reservas por día, días pasados atenuados).
