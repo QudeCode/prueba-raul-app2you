@@ -43,6 +43,13 @@ export interface DiaOcupado {
 
 export type Modalidad = Exclude<ModalidadReserva, 'AMBAS'>;
 
+/** «09:00–10:30» o «Todo el día». */
+export function textoHoras(reserva: Reserva): string {
+  return reserva.hora_inicio && reserva.hora_fin
+    ? `${reserva.hora_inicio}–${reserva.hora_fin}`
+    : 'Todo el día';
+}
+
 export function modalidadesDe(recurso: Recurso): Modalidad[] {
   switch (recurso.modalidad_reserva) {
     case 'POR_HORAS':

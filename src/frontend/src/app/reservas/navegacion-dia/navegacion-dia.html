@@ -1,0 +1,45 @@
+<div class="navegacion" (keydown.escape)="cerrarConEscape($event)">
+  <div class="barra">
+    <button
+      type="button"
+      class="boton-secundario"
+      (click)="cambiarFecha.emit(sumarDias(fecha(), -1))"
+    >
+      ‹ Día anterior
+    </button>
+    <button
+      type="button"
+      class="fecha boton-secundario"
+      aria-controls="calendario-desplegable"
+      aria-haspopup="true"
+      [attr.aria-expanded]="desplegado()"
+      (click)="desplegado.set(!desplegado())"
+    >
+      {{ formatoDiaLargo(fecha(), true) }}
+      <span aria-hidden="true">▾</span>
+      <span class="oculto">(elegir otro día)</span>
+    </button>
+    <button
+      type="button"
+      class="boton-secundario"
+      (click)="cambiarFecha.emit(sumarDias(fecha(), 1))"
+    >
+      Día siguiente ›
+    </button>
+  </div>
+
+  @if (desplegado()) {
+    <div id="calendario-desplegable">
+      <app-calendario
+        [compacto]="true"
+        [mes]="mes()"
+        [conteos]="conteos()"
+        [seleccionada]="fecha()"
+        [marcarLibre]="marcarLibre()"
+        [primerDiaElegible]="primerDiaElegible()"
+        (elegir)="elegir($event)"
+        (cambiarMes)="cambiarMes.emit($event)"
+      />
+    </div>
+  }
+</div>

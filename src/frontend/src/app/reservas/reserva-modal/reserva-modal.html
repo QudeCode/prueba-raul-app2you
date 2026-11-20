@@ -1,0 +1,19 @@
+<app-dialogo [titulo]="titulo()" (cerrar)="cerrar.emit()">
+  <ng-content />
+
+  @let d = disponibilidad();
+  @let dat = datos();
+  @if (d.error()) {
+    <div class="aviso" role="alert">
+      <p>No se pudo cargar la disponibilidad del día.</p>
+      <button type="button" (click)="d.reload()" [disabled]="d.isLoading()">
+        {{ d.isLoading() ? 'Reintentando…' : 'Reintentar' }}
+      </button>
+    </div>
+  } @else if (dat === null) {
+    <p class="estado" role="status">Cargando disponibilidad…</p>
+  } @else {
+    <h3>Reservas del día</h3>
+    <app-reservas-del-dia [reservas]="dat.reservas" />
+  }
+</app-dialogo>

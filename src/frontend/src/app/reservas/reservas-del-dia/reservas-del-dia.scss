@@ -1,0 +1,22 @@
+ul {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding-left: var(--espacio-3);
+}
+
+.vacio {
+  margin: 0;
+  color: var(--color-texto-suave);
+}
+
+.estado {
+  font-weight: 600;
+
+  &[data-estado='PENDIENTE'] {
+    color: var(--color-pendiente);
+  }
+  &[data-estado='APROBADA'] {
+    color: var(--color-aprobada);
+  }
+}

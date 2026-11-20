@@ -1,0 +1,32 @@
+dialog {
+  width: min(44rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+  color: var(--color-texto);
+
+  &::backdrop {
+    background: #00000080;
+  }
+}
+
+.contenido {
+  display: grid;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3);
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espacio-2);
+
+  h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--color-marca-oscuro);
+  }
+}

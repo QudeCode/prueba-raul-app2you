@@ -5,12 +5,14 @@ import { claveDia, claveMes, esClaveDia, esClaveMes } from '../common/fechas';
 import { RecursoCard } from '../recursos/recurso-card/recurso-card';
 import { RecursosService } from '../recursos/recursos.service';
 import { Calendario } from './calendario/calendario';
+import { NavegacionDia } from './navegacion-dia/navegacion-dia';
 import { primerDiaElegible, soloDiaCompleto } from './reserva.model';
+import { ReservaModal } from './reserva-modal/reserva-modal';
 import { ReservasService } from './reservas.service';
 
 @Component({
   selector: 'app-recurso-detalle-page',
-  imports: [RouterLink, RecursoCard, Calendario],
+  imports: [RouterLink, RecursoCard, Calendario, NavegacionDia, ReservaModal],
   templateUrl: './recurso-detalle.page.html',
   styleUrl: './recurso-detalle.page.scss',
 })
@@ -37,7 +39,7 @@ export class RecursoDetallePage {
     return esClaveDia(fecha) ? claveMes(fecha) : claveMes(this.hoy());
   });
 
-  /** Día elegido en el calendario (`fecha` válida). */
+  /** Con `fecha` válida, el modal está abierto en ese día. */
   protected readonly fechaActiva = computed(() => {
     const fecha = this.fecha();
     return esClaveDia(fecha) ? fecha : null;
@@ -54,6 +56,10 @@ export class RecursoDetallePage {
   private readonly recursoId = computed(() => this.recurso()?.id ?? null);
 
   protected readonly mesReservas = this.reservas.mes(this.recursoId, this.mesActivo);
+  protected readonly disponibilidad = this.reservas.disponibilidad(
+    this.recursoId,
+    this.fechaActiva,
+  );
 
   protected readonly conteos = computed(() =>
     this.mesReservas.hasValue()
@@ -78,6 +84,10 @@ export class RecursoDetallePage {
 
   protected cambiarMes(mes: string): void {
     this.irA({ mes });
+  }
+
+  protected cerrarModal(): void {
+    this.irA({ fecha: null });
   }
 
   private irA(queryParams: Record<string, string | null>): void {

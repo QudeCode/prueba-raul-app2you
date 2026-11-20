@@ -1,0 +1,15 @@
+@if (reservas().length === 0) {
+  <p class="vacio">No hay reservas este día.</p>
+} @else {
+  <ul>
+    @for (r of reservas(); track r.id) {
+      <li>
+        <strong>{{ textoHoras(r) }}</strong> · {{ nombreCompleto(r.titular) }} ·
+        <span class="estado" [attr.data-estado]="r.estado">{{ estadoLabel[r.estado] }}</span>
+        @if (r.asistentes_sala !== null) {
+          · {{ r.asistentes_sala }} {{ r.asistentes_sala === 1 ? 'persona' : 'personas' }}
+        }
+      </li>
+    }
+  </ul>
+}

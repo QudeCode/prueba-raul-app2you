@@ -1,0 +1,15 @@
+<dialog
+  #dialogo
+  aria-labelledby="titulo-dialogo"
+  (close)="alCerrar()"
+  (mousedown)="alPulsar($event, dialogo)"
+  (click)="alClicar($event, dialogo)"
+>
+  <div class="contenido">
+    <header class="cabecera">
+      <h2 id="titulo-dialogo">{{ titulo() }}</h2>
+      <button type="button" class="boton-secundario" (click)="dialogo.close()">Cerrar</button>
+    </header>
+    <ng-content />
+  </div>
+</dialog>

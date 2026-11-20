@@ -37,6 +37,24 @@
       />
     </section>
   </div>
+
+  @if (fechaActiva(); as f) {
+    <app-reserva-modal
+      [fecha]="f"
+      [disponibilidad]="disponibilidad"
+      (cerrar)="cerrarModal()"
+    >
+      <app-navegacion-dia
+        [fecha]="f"
+        [primerDiaElegible]="primerDia()"
+        [mes]="mesActivo()"
+        [conteos]="conteos()"
+        [marcarLibre]="marcarLibre()"
+        (cambiarFecha)="elegirDia($event)"
+        (cambiarMes)="cambiarMes($event)"
+      />
+    </app-reserva-modal>
+  }
 } @else {
   <p class="estado" role="status">No existe el recurso.</p>
 }
