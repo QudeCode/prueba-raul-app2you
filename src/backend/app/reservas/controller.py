@@ -45,9 +45,24 @@ def mias(service: Reservas, usuario: UsuarioActual) -> list[ReservaRespuesta]:
     return service.mias(usuario)
 
 
+@router.get("/pendientes")
+def pendientes(service: Reservas, usuario: UsuarioActual) -> list[ReservaRespuesta]:
+    return service.pendientes(usuario)
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 def crear(service: Reservas, usuario: UsuarioActual, peticion: ReservaPeticion) -> ReservaRespuesta:
     return service.crear(peticion, usuario)
+
+
+@router.post("/{reserva_id}/aprobar")
+def aprobar(service: Reservas, usuario: UsuarioActual, reserva_id: int) -> ReservaRespuesta:
+    return service.aprobar(reserva_id, usuario)
+
+
+@router.post("/{reserva_id}/rechazar")
+def rechazar(service: Reservas, usuario: UsuarioActual, reserva_id: int) -> ReservaRespuesta:
+    return service.rechazar(reserva_id, usuario)
 
 
 @router.post("/{reserva_id}/cancelar")

@@ -2,6 +2,7 @@ import { HttpClient, httpResource } from '@angular/common/http';
 import { inject, Injectable, Signal } from '@angular/core';
 import { Observable, tap, throwError } from 'rxjs';
 import { API_URL } from '../common/api';
+import { esResponsable } from '../usuarios/usuario.model';
 import { UsuariosService } from '../usuarios/usuarios.service';
 import { DiaOcupado, Disponibilidad, Reserva, ReservaNueva } from './reserva.model';
 
@@ -15,6 +16,14 @@ export class ReservasService {
   readonly mias = httpResource<Reserva[]>(() => {
     const headers = this.cabeceras();
     return headers ? { url: `${API_URL}/reservas/mias`, headers } : undefined;
+  });
+
+  /** Pendientes de aprobar: solo se piden si el usuario actual es responsable. */
+  readonly pendientes = httpResource<Reserva[]>(() => {
+    const headers = this.cabeceras();
+    return headers && esResponsable(this.usuarios.actual())
+      ? { url: `${API_URL}/reservas/pendientes`, headers }
+      : undefined;
   });
 
   disponibilidad(recursoId: Signal<number | null>, fecha: Signal<string | null>) {
@@ -45,6 +54,14 @@ export class ReservasService {
     return this.accion('', nueva);
   }
 
+  aprobar(id: number): Observable<Reserva> {
+    return this.accion(`/${id}/aprobar`);
+  }
+
+  rechazar(id: number): Observable<Reserva> {
+    return this.accion(`/${id}/rechazar`);
+  }
+
   cancelar(id: number): Observable<Reserva> {
     return this.accion(`/${id}/cancelar`);
   }
@@ -67,6 +84,7 @@ export class ReservasService {
     return this.http.post<Reserva>(`${API_URL}/reservas${ruta}`, cuerpo ?? null, { headers }).pipe(
       tap(() => {
         this.mias.reload();
+        this.pendientes.reload();
       }),
     );
   }

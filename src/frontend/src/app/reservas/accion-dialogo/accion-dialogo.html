@@ -6,6 +6,11 @@
 
   @if (accion() === 'cancelar') {
     <p>¿Cancelar la reserva de {{ r.recurso.nombre }} el {{ formatoDiaLargo(r.fecha, true) }}?</p>
+  } @else if (accion() === 'rechazar') {
+    <p>
+      ¿Rechazar la reserva de {{ nombreCompleto(r.titular) }} en {{ r.recurso.nombre }} el
+      {{ formatoDiaLargo(r.fecha, true) }}?
+    </p>
   } @else {
     <label class="campo">
       Nuevo titular

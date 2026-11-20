@@ -52,7 +52,7 @@ export interface ReservaNueva {
 }
 
 export type Modalidad = Exclude<ModalidadReserva, 'AMBAS'>;
-export type Pestana = 'activas' | 'pasadas';
+export type Pestana = 'activas' | 'pasadas' | 'por-aprobar';
 
 /** Tramo del día en minutos desde las 00:00. */
 export interface Seleccion {

@@ -269,6 +269,21 @@ class ReservaService:
         self.repositorio.guardar(reserva)
         return self._confirmar(reserva.id)
 
+    def aprobar(self, reserva_id: int, usuario: UsuarioRespuesta) -> ReservaRespuesta:
+        """Reglas 9, 10 y 12: no vuelve a comprobar conflictos, la pendiente ya bloqueaba su franja."""
+        reserva = self._para_actualizar(reserva_id)
+        self._exigir_pendiente_y_responsable(reserva, usuario, "aprobar")
+        reserva.estado = EstadoReserva.APROBADA
+        reserva.aprobada_por_id = usuario.id
+        return self._confirmar(reserva.id)
+
+    def rechazar(self, reserva_id: int, usuario: UsuarioRespuesta) -> ReservaRespuesta:
+        """Reglas 9 y 11."""
+        reserva = self._para_actualizar(reserva_id)
+        self._exigir_pendiente_y_responsable(reserva, usuario, "rechazar")
+        reserva.estado = EstadoReserva.RECHAZADA
+        return self._confirmar(reserva.id)
+
     def cancelar(self, reserva_id: int, usuario: UsuarioRespuesta) -> ReservaRespuesta:
         """Reglas 13 a 16."""
         reserva = self._para_actualizar(reserva_id)
@@ -300,6 +315,13 @@ class ReservaService:
     def mias(self, usuario: UsuarioRespuesta) -> list[ReservaRespuesta]:
         ahora = self.reloj()
         return [reserva_a_respuesta(r, ahora) for r in self.repositorio.de_titular(usuario.id)]
+
+    def pendientes(self, usuario: UsuarioRespuesta) -> list[ReservaRespuesta]:
+        """Todas las pendientes, también las de fechas pasadas: la regla 9 no las excluye."""
+        if usuario.rol != Rol.RESPONSABLE:
+            raise NoPermitido("Solo un responsable puede ver las reservas por aprobar")
+        ahora = self.reloj()
+        return [reserva_a_respuesta(r, ahora) for r in self.repositorio.pendientes()]
 
     def _validar(self, peticion: ReservaPeticion, recurso: RecursoRespuesta) -> tuple[time, time]:
         """Reglas 2, 3 y 4. Devuelve la franja de la reserva."""
@@ -334,6 +356,17 @@ class ReservaService:
         if reserva is None:
             raise NoEncontrado(f"No existe la reserva {reserva_id}")
         return reserva
+
+    @staticmethod
+    def _exigir_pendiente_y_responsable(
+        reserva: Reserva, usuario: UsuarioRespuesta, accion: str
+    ) -> None:
+        if usuario.rol != Rol.RESPONSABLE:
+            raise NoPermitido(f"Solo un responsable puede {accion} reservas")
+        if reserva.estado != EstadoReserva.PENDIENTE:
+            raise Conflicto(
+                f"Solo se pueden {accion} reservas pendientes; esta está {reserva.estado.lower()}"
+            )
 
     @staticmethod
     def _exigir_titular(reserva: Reserva, usuario: UsuarioRespuesta, accion: str) -> None:

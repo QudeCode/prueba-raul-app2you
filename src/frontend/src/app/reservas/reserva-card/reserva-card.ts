@@ -8,6 +8,8 @@ import { Reserva, textoHoras } from '../reserva.model';
 export interface AccionesReserva {
   cancelar: boolean;
   transferir: boolean;
+  aprobar: boolean;
+  rechazar: boolean;
 }
 
 @Component({
@@ -18,12 +20,20 @@ export interface AccionesReserva {
 })
 export class ReservaCard {
   readonly reserva = input.required<Reserva>();
-  readonly acciones = input<AccionesReserva>({ cancelar: false, transferir: false });
+  readonly mostrarTitular = input(false);
+  readonly acciones = input<AccionesReserva>({
+    cancelar: false,
+    transferir: false,
+    aprobar: false,
+    rechazar: false,
+  });
   /** Deshabilita los botones mientras hay una acción en curso. */
   readonly ocupada = input(false);
 
   readonly cancelar = output();
   readonly transferir = output();
+  readonly aprobar = output();
+  readonly rechazar = output();
 
   protected readonly estadoLabel = ESTADO_RESERVA_LABELS;
   protected readonly politicaLabel = POLITICA_CANCELACION_LABELS;

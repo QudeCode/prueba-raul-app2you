@@ -72,6 +72,12 @@ class ReservaRepository:
         )
         return list(self.session.scalars(consulta))
 
+    def pendientes(self) -> list[Reserva]:
+        consulta = _con_relaciones(
+            select(Reserva).where(Reserva.estado == EstadoReserva.PENDIENTE).order_by(*ORDEN)
+        )
+        return list(self.session.scalars(consulta))
+
     def bloquear_recurso(self, recurso_id: int) -> None:
         """Serializa las reservas de un recurso hasta el commit (decisión 0013)."""
         self.session.execute(select(Recurso.id).where(Recurso.id == recurso_id).with_for_update())

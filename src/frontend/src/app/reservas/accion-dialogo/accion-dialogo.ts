@@ -4,9 +4,9 @@ import { formatoDiaLargo } from '../../common/fechas';
 import { nombreCompleto, Usuario } from '../../usuarios/usuario.model';
 import { Reserva, textoHoras } from '../reserva.model';
 
-export type AccionReserva = 'cancelar' | 'transferir';
+export type AccionReserva = 'cancelar' | 'transferir' | 'rechazar';
 
-/** Confirma cancelar una reserva, o elige a quién se transfiere. */
+/** Confirma cancelar o rechazar una reserva, o elige a quién se transfiere. */
 @Component({
   selector: 'app-accion-dialogo',
   imports: [Dialogo],
@@ -33,10 +33,12 @@ export class AccionDialogo {
 
   protected readonly titulo: Record<AccionReserva, string> = {
     cancelar: 'Cancelar reserva',
+    rechazar: 'Rechazar reserva',
     transferir: 'Transferir reserva',
   };
   protected readonly botonAceptar: Record<AccionReserva, string> = {
     cancelar: 'Cancelar reserva',
+    rechazar: 'Rechazar reserva',
     transferir: 'Transferir',
   };
   protected readonly nombreCompleto = nombreCompleto;

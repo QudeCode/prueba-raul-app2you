@@ -27,6 +27,12 @@
       <dt>Cancelación</dt>
       <dd>{{ politicaLabel[r.recurso.politica_cancelacion] }}</dd>
     </div>
+    @if (mostrarTitular()) {
+      <div>
+        <dt>Titular</dt>
+        <dd>{{ nombreCompleto(r.titular) }}</dd>
+      </div>
+    }
     @if (r.aprobada_por; as aprobador) {
       <div>
         <dt>Aprobada por</dt>
@@ -37,6 +43,27 @@
 
   @if (hayAcciones()) {
     <footer class="pie">
+      @if (acciones().aprobar) {
+        <button
+          type="button"
+          [disabled]="ocupada()"
+          [attr.aria-label]="contexto('Aprobar')"
+          (click)="aprobar.emit()"
+        >
+          Aprobar
+        </button>
+      }
+      @if (acciones().rechazar) {
+        <button
+          type="button"
+          class="boton-peligro"
+          [disabled]="ocupada()"
+          [attr.aria-label]="contexto('Rechazar')"
+          (click)="rechazar.emit()"
+        >
+          Rechazar
+        </button>
+      }
       @if (acciones().transferir) {
         <button
           type="button"

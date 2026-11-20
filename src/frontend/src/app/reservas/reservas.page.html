@@ -1,4 +1,4 @@
-<span class="etiqueta-seccion">Mis reservas</span>
+<span class="etiqueta-seccion">Mis reservas y aprobaciones</span>
 <h1 #titulo tabindex="-1">Reservas</h1>
 
 <nav class="pestanas" aria-label="Estado de las reservas">
@@ -16,6 +16,15 @@
     [attr.aria-current]="pestanaActiva() === 'pasadas' ? 'page' : null"
     >Pasadas ({{ cuentas().pasadas }})</a
   >
+  @if (esResponsable()) {
+    <a
+      routerLink="."
+      [queryParams]="{ pestana: 'por-aprobar' }"
+      queryParamsHandling="merge"
+      [attr.aria-current]="pestanaActiva() === 'por-aprobar' ? 'page' : null"
+      >Por aprobar ({{ cuentas()['por-aprobar'] }})</a
+    >
+  }
 </nav>
 
 <div role="status" aria-live="polite">
@@ -49,10 +58,13 @@
       <li>
         <app-reserva-card
           [reserva]="r"
+          [mostrarTitular]="pestanaActiva() === 'por-aprobar'"
           [acciones]="accionesDe(r)"
           [ocupada]="accionando()"
           (cancelar)="abrirDialogo('cancelar', r)"
           (transferir)="abrirDialogo('transferir', r)"
+          (aprobar)="aprobar(r)"
+          (rechazar)="abrirDialogo('rechazar', r)"
         />
       </li>
     }
