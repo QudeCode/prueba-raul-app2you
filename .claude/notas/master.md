@@ -21,7 +21,7 @@ Repasar la aplicación contra el enunciado y corregir lo que se interpretó de o
 Prueba en local y push al repositorio.
 
 ## Pantallas acordadas
-- **Detalle del recurso:** desde la tarjeta de `/recursos`, con un calendario mensual en el centro (recuento de reservas por día, días pasados atenuados).
+- **Detalle del recurso:** desde la tarjeta de `/recursos`, con un calendario mensual en el centro (recuento de reservas por día; los días pasados no se pueden abrir, pero muestran su ocupación).
 - **Por horas:** al elegir un día se abre un modal con el timeline de 00:00 a 24:00 (franjas ocupadas con titular y estado) y la navegación de día (anterior, siguiente y calendario desplegable). Con aforo compartido, la capacidad libre por franja.
 - **Día completo:** el calendario marca cada día como libre u ocupado; al pulsar un día se confirma la reserva.
 - **Equipos:** en el modal se elige primero la modalidad; en día completo, el timeline se sustituye por «todo el día».

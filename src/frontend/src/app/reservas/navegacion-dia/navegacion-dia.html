@@ -3,6 +3,7 @@
     <button
       type="button"
       class="boton-secundario"
+      [disabled]="sumarDias(fecha(), -1) < primerDiaElegible()"
       (click)="cambiarFecha.emit(sumarDias(fecha(), -1))"
     >
       ‹ Día anterior

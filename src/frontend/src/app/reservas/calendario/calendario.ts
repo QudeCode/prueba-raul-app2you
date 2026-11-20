@@ -14,7 +14,7 @@ export class Calendario {
   readonly seleccionada = input<string | null>(null);
   /** «Libre» u «Ocupado» en lugar del recuento (recursos que solo admiten día completo). */
   readonly marcarLibre = input(false);
-  /** Los días anteriores no se pueden reservar: sin reservas se desactivan, con reservas son de consulta. */
+  /** Los días anteriores no se pueden reservar ni abrir; siguen mostrando su ocupación. */
   readonly primerDiaElegible = input.required<string>();
   readonly compacto = input(false);
 
@@ -37,10 +37,6 @@ export class Calendario {
 
   protected pasado(dia: string): boolean {
     return dia < this.primerDiaElegible();
-  }
-
-  protected desactivado(dia: string): boolean {
-    return this.pasado(dia) && this.conteo(dia) === 0;
   }
 
   protected resumen(dia: string): string {

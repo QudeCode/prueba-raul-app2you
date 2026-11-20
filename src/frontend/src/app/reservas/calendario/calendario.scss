@@ -67,6 +67,11 @@
   }
 
   &:disabled {
+    cursor: not-allowed;
+  }
+
+  // Un día pasado sin reservas se atenúa; con reservas se sigue leyendo su ocupación
+  &:disabled:not(.ocupado) {
     opacity: 0.45;
   }
 

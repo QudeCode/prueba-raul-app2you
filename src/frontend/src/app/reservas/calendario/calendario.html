@@ -37,7 +37,7 @@
               [attr.data-libre]="marcarLibre() ? conteo(dia) === 0 : null"
               [attr.aria-current]="dia === seleccionada() ? 'date' : null"
               [attr.aria-label]="etiqueta(dia)"
-              [disabled]="desactivado(dia)"
+              [disabled]="pasado(dia)"
               (click)="elegir.emit(dia)"
             >
               <span class="numero">{{ numero(dia) }}</span>
