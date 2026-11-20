@@ -71,6 +71,24 @@ npm start
 - **Reservas:** las propias y, para un responsable, las pendientes de aprobar, en pestañas «Activas», «Pasadas» y, para un responsable, «Por aprobar». Cancelar y transferir solo aparecen cuando la política del recurso lo permite.
 - **API:** en http://localhost:8000/docs. Los principales: `GET /recursos` (y `/recursos/{id}`), `GET /recursos/{id}/disponibilidad?fecha=` y `…/disponibilidad/mes?anio=&mes=`, que son públicos, y `/reservas` (crear, `GET /reservas/{id}`, `mias`, `pendientes` y las acciones `aprobar`, `rechazar`, `cancelar` y `transferir`). Los de reservas piden la cabecera `X-Usuario-Id` con el id del usuario (1 Ana, 2 Luis, 3 Marta, 4 Jordi).
 
+### Probar la API con curl
+
+Con el seed cargado, la Sala Mar es el recurso 1 (aforo compartido de 10). Sustituye `2030-01-15` por una fecha futura.
+
+```bash
+# Disponibilidad de la Sala Mar ese día: franjas libres, capacidad libre y reservas que las ocupan
+curl "http://localhost:8000/recursos/1/disponibilidad?fecha=2030-01-15"
+
+# Ana (trabajadora, id 1) reserva de 10:00 a 11:00 para 4 personas: queda PENDIENTE
+curl -X POST http://localhost:8000/reservas \
+  -H "Content-Type: application/json" -H "X-Usuario-Id: 1" \
+  -d '{"recurso_id": 1, "fecha": "2030-01-15", "hora_inicio": "10:00", "hora_fin": "11:00", "asistentes_sala": 4}'
+
+# Marta (responsable, id 3) ve las pendientes y aprueba la de Ana (usa el id que devolvió la petición anterior)
+curl -H "X-Usuario-Id: 3" http://localhost:8000/reservas/pendientes
+curl -X POST -H "X-Usuario-Id: 3" http://localhost:8000/reservas/<id>/aprobar
+```
+
 ## Estructura
 
 ```

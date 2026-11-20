@@ -20,7 +20,7 @@
    - Por horas: `hora_inicio` y `hora_fin` informadas, con `hora_inicio < hora_fin`. `hora_fin` es como muy tarde las 23:59.
    - Día completo: sin horas.
 3. No se puede reservar en el pasado.
-4. `asistentes_sala`: obligatorio y `>= 1` en salas con aforo compartido; vacío en el resto de recursos.
+4. `asistentes_sala`: obligatorio y `>= 1` en salas con aforo compartido; vacío en el resto de recursos. En una sala sin aforo compartido la reserva ocupa la sala entera, así que no se piden asistentes y `capacidadMaxima` es solo informativa.
 5. Sin aforo compartido: la franja no puede solaparse con ninguna reserva activa del recurso.
 6. Con aforo compartido: en ningún momento de la franja la suma de `asistentes_sala` de las reservas activas puede superar `capacidadMaxima`. Se comprueba el momento de máxima ocupación, no la suma de todas las reservas que se solapan.
 7. Estado inicial según el rol del titular:
@@ -34,11 +34,9 @@
 
 ## Aprobar o rechazar
 9. Solo un responsable, y solo sobre reservas `PENDIENTE`.
-10. Aprobar: pasa a `APROBADA` y se guarda quién la aprobó.
+10. Aprobar: pasa a `APROBADA` y se guarda quién la aprobó. Solo se aprueba una reserva que no ha comenzado (concepto «Inicio»); una pendiente que ya ha comenzado solo se puede rechazar y, mientras no se rechace, sigue activa y ocupando el recurso.
 11. Rechazar: pasa a `RECHAZADA`.
 12. Al aprobar no se vuelven a comprobar conflictos: mientras una reserva está pendiente, solo un responsable puede reservar encima (regla 8), y si estorba la rechaza al hacerlo.
-
-21) Solo se aprueba una reserva que no ha comenzado (concepto «Inicio»). Una pendiente que ya ha comenzado solo se puede rechazar; mientras no se rechace, sigue activa y ocupando el recurso.
 
 ## Cancelar o transferir
 13. Solo el titular, y solo sobre reservas activas.
@@ -50,6 +48,8 @@
 | Flexible  | Hasta 1h antes       | Hasta el inicio              |
 | Moderada  | Hasta 24h antes      | Desde 24h antes hasta el inicio |
 | Bloqueada | No                   | No                           |
+
+   La política se aplica igual a las reservas pendientes que a las aprobadas: con la bloqueada, el titular tampoco puede retirar una pendiente; solo un responsable puede rechazarla (regla 11).
 
 16. Cancelar: pasa a `CANCELADA`.
 17. Transferir: solo cambia el titular; el estado se mantiene.

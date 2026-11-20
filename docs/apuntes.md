@@ -43,7 +43,7 @@
   Corregido al releer el enunciado (punto 4): un responsable puede reservar aunque haya pendientes; las que estorban se rechazan (regla 8, decisión 0016).
 - Nuevo estado: Rechazada (un responsable rechaza una reserva pendiente).
 - Una reserva ocupa un único día (también los vehículos).
-- La disponibilidad por horas se calcula sobre el día entero, sin horario laboral: de 00:00 a 23:59, la hora de fin máxima de una reserva por horas. El día completo ocupa de 00:00 a 24:00.
+- La disponibilidad por horas se calcula sobre el día entero, sin horario laboral: de 00:00 a 23:59, la hora de fin máxima de una reserva por horas. El día completo ocupa de 00:00 a 24:00. El tope de las 23:59 es técnico: PostgreSQL guarda `24:00` en un `TIME`, pero Python (`datetime.time`) no puede leerlo.
 - Política de cancelación (libre por cada recurso, independientemente del tipo):
   - Flexible: cancelar hasta 1h antes; transferir hasta el inicio.
   - Moderada: hasta 24h antes solo cancelar; pasado ese límite solo transferir (hasta el inicio).

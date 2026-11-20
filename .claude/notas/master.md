@@ -11,7 +11,7 @@ Repasar la aplicación contra el enunciado y corregir lo que se interpretó de o
 - **Reservas de punta a punta** (plan `reservas`): disponibilidad por día y por mes, crear, aprobar, rechazar, cancelar y transferir (decisiones 0011 a 0013); detalle del recurso con calendario y modal con timeline, y página «Reservas» con sus pestañas. Verificado con scripts temporales fuera del repo, `npm run build` y prueba del usuario en local.
 - **Datos de prueba** con reservas aleatorias creadas con las mismas reglas que la API.
 - **Documentación de arquitectura:** `docs/arquitectura.md` con los diagramas reducido y detallado, enlazada desde el README.
-- **Correcciones de la revisión** (plan `correcciones-revision`): interpretación de las políticas (0014); no se aprueban pendientes ya comenzadas (regla 21); rutas REST con la disponibilidad bajo el recurso (0015); un responsable reserva sobre pendientes y rechaza las que estorban (regla 8, 0016). Revisado con `dev:revisar-cambios` completo.
+- **Correcciones de la revisión** (plan `correcciones-revision`): interpretación de las políticas (0014); no se aprueban pendientes ya comenzadas (regla 10); rutas REST con la disponibilidad bajo el recurso (0015); un responsable reserva sobre pendientes y rechaza las que estorban (regla 8, 0016). Revisado con `dev:revisar-cambios` completo.
 
 ## Pendiente
 - Prueba del usuario en local de las correcciones (`python -m app.seed` antes): como Marta, reservar sobre una pendiente con el aviso previo y la lista de rechazadas; como Ana, la franja sigue ocupada; en «Por aprobar», una pendiente ya comenzada solo deja rechazar.

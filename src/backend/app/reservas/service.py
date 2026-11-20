@@ -113,7 +113,7 @@ def puede_transferir(politica: PoliticaCancelacion, inicio: datetime, ahora: dat
 
 
 def comenzada(inicio: datetime, ahora: datetime) -> bool:
-    """Regla 21: una reserva ha comenzado cuando llega su inicio."""
+    """Regla 10: una reserva ha comenzado cuando llega su inicio."""
     return ahora >= inicio
 
 
@@ -386,7 +386,7 @@ class ReservaService:
         )
 
     def aprobar(self, reserva_id: int, usuario: UsuarioRespuesta) -> ReservaRespuesta:
-        """Reglas 9, 10, 12 y 21: no vuelve a comprobar conflictos; solo un responsable reserva encima."""
+        """Reglas 9, 10 y 12: no vuelve a comprobar conflictos; solo un responsable reserva encima."""
         reserva = self._obtener(reserva_id, para_actualizar=True)
         self._exigir_pendiente_y_responsable(reserva, usuario, "aprobar")
         if comenzada(inicio_de(reserva.fecha, reserva.hora_inicio), self.reloj()):
