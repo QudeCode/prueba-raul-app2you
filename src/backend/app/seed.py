@@ -154,6 +154,9 @@ def generar_reservas(session: Session, aleatorio: random.Random) -> Counter[Esta
                 except ErrorDominio:
                     continue  # el hueco ya estaba ocupado
                 creadas[reserva.id] = reserva
+                # Un responsable puede haber rechazado pendientes (regla 8): no se aprueban luego
+                for rechazada in reserva.rechazadas:
+                    creadas[rechazada.id] = rechazada
 
     # Aprueba alrededor de la mitad de las pendientes y rechaza una de cada cinco
     pendientes = [r for r in creadas.values() if r.estado == EstadoReserva.PENDIENTE]

@@ -5,15 +5,25 @@ import { ahoraPorMinuto } from '../common/reloj';
 import { claveDia, claveMes, esClaveDia, esClaveMes } from '../common/fechas';
 import { RecursoCard } from '../recursos/recurso-card/recurso-card';
 import { RecursosService } from '../recursos/recursos.service';
+import { esResponsable } from '../usuarios/usuario.model';
+import { UsuariosService } from '../usuarios/usuarios.service';
 import { Calendario } from './calendario/calendario';
 import { NavegacionDia } from './navegacion-dia/navegacion-dia';
-import { primerDiaElegible, ReservaNueva, soloDiaCompleto } from './reserva.model';
+import {
+  primerDiaElegible,
+  Reserva,
+  ReservaCreada,
+  ReservaNueva,
+  soloDiaCompleto,
+  textoRechazadas,
+} from './reserva.model';
 import { ReservaModal } from './reserva-modal/reserva-modal';
+import { ReservasDelDia } from './reservas-del-dia/reservas-del-dia';
 import { ReservasService } from './reservas.service';
 
 @Component({
   selector: 'app-recurso-detalle-page',
-  imports: [RouterLink, RecursoCard, Calendario, NavegacionDia, ReservaModal],
+  imports: [RouterLink, RecursoCard, Calendario, NavegacionDia, ReservaModal, ReservasDelDia],
   templateUrl: './recurso-detalle.page.html',
   styleUrl: './recurso-detalle.page.scss',
 })
@@ -26,6 +36,10 @@ export class RecursoDetallePage {
   private readonly router = inject(Router);
   private readonly reservas = inject(ReservasService);
   protected readonly recursos = inject(RecursosService).recursos;
+  private readonly usuarios = inject(UsuariosService);
+
+  /** A un responsable solo le bloquean las aprobadas (regla 8). */
+  protected readonly responsable = computed(() => esResponsable(this.usuarios.actual()));
 
   /** «Ahora» con precisión de minuto, de donde salen `hoy` y el primer minuto elegible. */
   protected readonly ahora = ahoraPorMinuto();
@@ -82,6 +96,9 @@ export class RecursoDetallePage {
   protected readonly enviando = signal(false);
   protected readonly errorReserva = signal<string | null>(null);
   protected readonly aviso = signal<string | null>(null);
+  /** Pendientes que acaba de rechazar el responsable al reservar (regla 8). */
+  protected readonly rechazadas = signal<Reserva[]>([]);
+  protected readonly textoRechazadas = textoRechazadas;
 
   constructor() {
     // El error de la API es del día en el que se produjo
@@ -93,6 +110,7 @@ export class RecursoDetallePage {
 
   protected elegirDia(fecha: string): void {
     this.aviso.set(null);
+    this.rechazadas.set([]);
     this.irA({ fecha, mes: claveMes(fecha) });
   }
 
@@ -108,13 +126,14 @@ export class RecursoDetallePage {
     this.enviando.set(true);
     this.errorReserva.set(null);
     this.reservas.crear(nueva).subscribe({
-      next: (reserva) => {
+      next: (reserva: ReservaCreada) => {
         this.enviando.set(false);
         this.aviso.set(
           reserva.estado === 'APROBADA'
             ? 'Reserva creada y aprobada.'
             : 'Reserva creada: pendiente de aprobación.',
         );
+        this.rechazadas.set(reserva.rechazadas);
         this.cerrarModal();
         this.mesReservas.reload();
         this.disponibilidad.reload();

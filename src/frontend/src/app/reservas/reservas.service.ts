@@ -4,7 +4,7 @@ import { Observable, tap, throwError } from 'rxjs';
 import { API_URL } from '../common/api';
 import { esResponsable } from '../usuarios/usuario.model';
 import { UsuariosService } from '../usuarios/usuarios.service';
-import { DiaOcupado, Disponibilidad, Reserva, ReservaNueva } from './reserva.model';
+import { DiaOcupado, Disponibilidad, Reserva, ReservaCreada, ReservaNueva } from './reserva.model';
 
 /** Único conocedor de la API de reservas y disponibilidad (decisión 0008). */
 @Injectable({ providedIn: 'root' })
@@ -50,8 +50,8 @@ export class ReservasService {
     });
   }
 
-  crear(nueva: ReservaNueva): Observable<Reserva> {
-    return this.accion('', nueva);
+  crear(nueva: ReservaNueva): Observable<ReservaCreada> {
+    return this.accion<ReservaCreada>('', nueva);
   }
 
   aprobar(id: number): Observable<Reserva> {
@@ -76,12 +76,12 @@ export class ReservasService {
     return id === null ? null : { 'X-Usuario-Id': String(id) };
   }
 
-  private accion(ruta: string, cuerpo?: object): Observable<Reserva> {
+  private accion<T extends Reserva = Reserva>(ruta: string, cuerpo?: object): Observable<T> {
     const headers = this.cabeceras();
     if (!headers) {
       return throwError(() => new Error('No hay usuario seleccionado.'));
     }
-    return this.http.post<Reserva>(`${API_URL}/reservas${ruta}`, cuerpo ?? null, { headers }).pipe(
+    return this.http.post<T>(`${API_URL}/reservas${ruta}`, cuerpo ?? null, { headers }).pipe(
       tap(() => {
         this.mias.reload();
         this.pendientes.reload();

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query, status
 from app.reservas.dto import (
     DiaOcupadoRespuesta,
     DisponibilidadRespuesta,
+    ReservaCreadaRespuesta,
     ReservaPeticion,
     ReservaRespuesta,
     TransferenciaPeticion,
@@ -60,7 +61,9 @@ def obtener(service: Reservas, usuario: UsuarioActual, reserva_id: int) -> Reser
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def crear(service: Reservas, usuario: UsuarioActual, peticion: ReservaPeticion) -> ReservaRespuesta:
+def crear(
+    service: Reservas, usuario: UsuarioActual, peticion: ReservaPeticion
+) -> ReservaCreadaRespuesta:
     return service.crear(peticion, usuario)
 
 

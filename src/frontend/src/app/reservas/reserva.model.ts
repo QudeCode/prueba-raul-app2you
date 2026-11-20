@@ -22,11 +22,19 @@ export interface Reserva {
   puede_aprobar: boolean;
 }
 
+/** Respuesta de crear: las pendientes que ha rechazado un responsable, en el orden de rechazo (regla 8). */
+export interface ReservaCreada extends Reserva {
+  rechazadas: Reserva[];
+}
+
 export interface Franja {
   inicio: string;
   fin: string;
   libre: boolean;
   capacidad_libre: number | null;
+  /** Contando solo las aprobadas: lo que puede reservar un responsable (regla 8). */
+  libre_sin_pendientes: boolean;
+  capacidad_libre_sin_pendientes: number | null;
 }
 
 export interface Disponibilidad {
@@ -37,6 +45,7 @@ export interface Disponibilidad {
   franjas: Franja[] | null;
   /** `null` si el recurso no admite día completo. */
   dia_completo_libre: boolean | null;
+  dia_completo_libre_sin_pendientes: boolean | null;
 }
 
 export interface DiaOcupado {
@@ -73,6 +82,13 @@ export function aMinutos(hora: string): number {
 
 export function aHora(minutos: number): string {
   return `${dos(Math.floor(minutos / 60))}:${dos(minutos % 60)}`;
+}
+
+/** La franja de una reserva en minutos; el día completo ocupa el eje entero. */
+export function rangoMinutos(reserva: Reserva): [number, number] {
+  return reserva.hora_inicio && reserva.hora_fin
+    ? [aMinutos(reserva.hora_inicio), aMinutos(reserva.hora_fin)]
+    : [0, MINUTOS_DIA];
 }
 
 /** «09:00–10:30» o «Todo el día». */
@@ -141,8 +157,71 @@ export function primerMinuto(fecha: string, ahora: Date): number {
   return Math.min(ahora.getHours() * 60 + ahora.getMinutes() + 1, MINUTOS_DIA);
 }
 
+/** Concepto «Solapamiento», en minutos. */
+export function seSolapa(inicioA: number, finA: number, inicioB: number, finB: number): boolean {
+  return inicioA < finB && inicioB < finA;
+}
+
 function tramosQueCubre(franjas: Franja[], inicio: number, fin: number): Franja[] {
-  return franjas.filter((f) => aMinutos(f.inicio) < fin && aMinutos(f.fin) > inicio);
+  return franjas.filter((f) => seSolapa(aMinutos(f.inicio), aMinutos(f.fin), inicio, fin));
+}
+
+/**
+ * Lo que el usuario puede reservar: a un responsable solo le bloquean las aprobadas (regla 8), así
+ * que ve la disponibilidad sin pendientes; a un trabajador, la original.
+ */
+export function disponibilidadPara(d: Disponibilidad, responsable: boolean): Disponibilidad {
+  if (!responsable) {
+    return d;
+  }
+  return {
+    ...d,
+    franjas:
+      d.franjas?.map((f) => ({
+        ...f,
+        libre: f.libre_sin_pendientes,
+        capacidad_libre: f.capacidad_libre_sin_pendientes,
+      })) ?? null,
+    dia_completo_libre: d.dia_completo_libre_sin_pendientes,
+  };
+}
+
+export interface EntradaEstorban {
+  recurso: Recurso;
+  modalidad: Modalidad;
+  seleccion: Seleccion | null;
+  asistentes: number | null;
+  /** La disponibilidad original, con las pendientes. */
+  disponibilidad: Disponibilidad;
+}
+
+/**
+ * Pendientes que un responsable rechazaría al confirmar (regla 8). Sin aforo, las que se solapan,
+ * que son exactamente las que rechaza el backend; con aforo, las candidatas: el backend rechaza
+ * solo las necesarias y la lista exacta llega en la respuesta.
+ */
+export function pendientesQueEstorban(e: EntradaEstorban): Reserva[] {
+  const pendientes = e.disponibilidad.reservas.filter((r) => r.estado === 'PENDIENTE');
+  if (e.modalidad === 'DIA_COMPLETO') {
+    return e.disponibilidad.dia_completo_libre === false ? pendientes : [];
+  }
+  const { seleccion } = e;
+  const franjas = e.disponibilidad.franjas ?? [];
+  if (seleccion === null || seleccion.fin <= seleccion.inicio) {
+    return [];
+  }
+  const asistentes = capacidadCompartida(e.recurso) !== null ? e.asistentes : null;
+  if (tramoLibre(franjas, seleccion, asistentes)) {
+    return [];
+  }
+  return pendientes.filter((r) => seSolapa(...rangoMinutos(r), seleccion.inicio, seleccion.fin));
+}
+
+/** «Se han rechazado 2 reservas pendientes:», encabezado de la lista de rechazadas. */
+export function textoRechazadas(total: number): string {
+  return total === 1
+    ? 'Se ha rechazado 1 reserva pendiente:'
+    : `Se han rechazado ${total} reservas pendientes:`;
 }
 
 /** Capacidad libre mínima exigida: 1 persona si no se indica. */

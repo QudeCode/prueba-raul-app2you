@@ -38,8 +38,9 @@
 
 
 ## Decisiones
-- Una reserva pendiente bloquea el recurso para todos, también para un responsable.
-  Si un responsable quiere ese hueco: primero rechaza la pendiente, luego reserva.
+- ~~Una reserva pendiente bloquea el recurso para todos, también para un responsable.~~
+  ~~Si un responsable quiere ese hueco: primero rechaza la pendiente, luego reserva.~~
+  Corregido al releer el enunciado (punto 4): un responsable puede reservar aunque haya pendientes; las que estorban se rechazan (regla 8, decisión 0016).
 - Nuevo estado: Rechazada (un responsable rechaza una reserva pendiente).
 - Una reserva ocupa un único día (también los vehículos).
 - La disponibilidad por horas se calcula sobre el día entero, sin horario laboral: de 00:00 a 23:59, la hora de fin máxima de una reserva por horas. El día completo ocupa de 00:00 a 24:00.

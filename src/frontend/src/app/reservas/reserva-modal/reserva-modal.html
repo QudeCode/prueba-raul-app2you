@@ -2,7 +2,7 @@
   <ng-content />
 
   @let d = disponibilidad();
-  @let dat = datos();
+  @let dat = vista();
   @if (d.error()) {
     <div class="aviso" role="alert">
       <p>No se pudo cargar la disponibilidad del día.</p>
@@ -104,10 +104,27 @@
     @if (motivo(); as texto) {
       <p id="motivo-reserva" class="motivo" role="status">{{ texto }}</p>
     }
+    @if (estorban().length > 0) {
+      <div id="aviso-rechazos" class="rechazos" role="status" aria-atomic="true">
+        <p>
+          {{
+            aforo()
+              ? 'Al confirmar se rechazarán las pendientes que haga falta de estas:'
+              : 'Al confirmar se rechazarán estas reservas pendientes:'
+          }}
+        </p>
+        <app-reservas-del-dia [reservas]="estorban()" />
+      </div>
+    }
     @if (error(); as texto) {
       <p class="error" role="alert">{{ texto }}</p>
     }
-    <button type="button" [disabled]="motivo() !== null || enviando()" (click)="confirmarReserva()">
+    <button
+      type="button"
+      [disabled]="motivo() !== null || enviando()"
+      [attr.aria-describedby]="estorban().length > 0 ? 'aviso-rechazos' : null"
+      (click)="confirmarReserva()"
+    >
       {{ enviando() ? 'Reservando…' : 'Confirmar reserva' }}
     </button>
   }

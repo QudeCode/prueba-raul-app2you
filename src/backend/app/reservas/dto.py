@@ -41,11 +41,19 @@ class ReservaRespuesta(BaseModel):
     puede_aprobar: bool
 
 
+class ReservaCreadaRespuesta(ReservaRespuesta):
+    # Las pendientes que un responsable ha rechazado al crear, en el orden en que se rechazaron
+    rechazadas: list[ReservaRespuesta]
+
+
 class FranjaRespuesta(BaseModel):
     inicio: HoraMinuto
     fin: HoraMinuto
     libre: bool
     capacidad_libre: int | None
+    # Contando solo las aprobadas: lo que puede reservar un responsable (regla 8)
+    libre_sin_pendientes: bool
+    capacidad_libre_sin_pendientes: int | None
 
 
 class DisponibilidadRespuesta(BaseModel):
@@ -54,6 +62,7 @@ class DisponibilidadRespuesta(BaseModel):
     reservas: list[ReservaRespuesta]
     franjas: list[FranjaRespuesta] | None
     dia_completo_libre: bool | None
+    dia_completo_libre_sin_pendientes: bool | None
 
 
 class DiaOcupadoRespuesta(BaseModel):

@@ -23,6 +23,18 @@ def _con_relaciones(consulta: Select[tuple[Reserva]]) -> Select[tuple[Reserva]]:
     )
 
 
+def _consulta_activas_del_dia(recurso_id: int, fecha: date) -> Select[tuple[Reserva]]:
+    return _con_relaciones(
+        select(Reserva)
+        .where(
+            Reserva.recurso_id == recurso_id,
+            Reserva.fecha == fecha,
+            Reserva.estado.in_(ESTADOS_ACTIVOS),
+        )
+        .order_by(*ORDEN)
+    )
+
+
 class ReservaRepository:
     def __init__(self, session: Session):
         self.session = session
@@ -42,14 +54,14 @@ class ReservaRepository:
         return self.session.scalars(consulta).first()
 
     def activas_del_dia(self, recurso_id: int, fecha: date) -> list[Reserva]:
-        consulta = _con_relaciones(
-            select(Reserva)
-            .where(
-                Reserva.recurso_id == recurso_id,
-                Reserva.fecha == fecha,
-                Reserva.estado.in_(ESTADOS_ACTIVOS),
-            )
-            .order_by(*ORDEN)
+        return list(self.session.scalars(_consulta_activas_del_dia(recurso_id, fecha)))
+
+    def activas_del_dia_para_actualizar(self, recurso_id: int, fecha: date) -> list[Reserva]:
+        """Bloquea las filas hasta el commit: nadie aprueba una pendiente que se va a rechazar (decisión 0016)."""
+        consulta = (
+            _consulta_activas_del_dia(recurso_id, fecha)
+            .with_for_update(of=Reserva)
+            .execution_options(populate_existing=True)
         )
         return list(self.session.scalars(consulta))
 

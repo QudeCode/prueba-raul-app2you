@@ -7,6 +7,7 @@ import {
   aMinutos,
   Franja,
   MINUTOS_DIA,
+  rangoMinutos,
   Reserva,
   Seleccion,
   textoHoras,
@@ -59,8 +60,7 @@ export class Timeline {
 
   protected readonly bloques = computed<Bloque[]>(() =>
     this.reservas().map((reserva) => {
-      const inicio = reserva.hora_inicio ? aMinutos(reserva.hora_inicio) : 0;
-      const fin = reserva.hora_fin ? aMinutos(reserva.hora_fin) : MINUTOS_DIA;
+      const [inicio, fin] = rangoMinutos(reserva);
       return { reserva, izquierda: this.porcentaje(inicio), ancho: this.porcentaje(fin - inicio) };
     }),
   );

@@ -17,3 +17,4 @@
 | [0013](0013-disponibilidad-por-tramos.md) | Disponibilidad por tramos y reservas serializadas | aceptada · ADR |
 | [0014](0014-interpretacion-politicas-de-cancelacion.md) | Interpretación de las políticas de cancelación | aceptada |
 | [0015](0015-rutas-rest-de-recursos-y-reservas.md) | Rutas REST de recursos, reservas y disponibilidad | aceptada |
+| [0016](0016-responsable-reserva-sobre-pendientes.md) | Un responsable reserva sobre pendientes | aceptada · ADR |

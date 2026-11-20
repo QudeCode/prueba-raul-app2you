@@ -26,13 +26,17 @@
 7. Estado inicial según el rol del titular:
    - Trabajador: `PENDIENTE`.
    - Responsable: `APROBADA`, con él mismo como aprobador.
-8. Una reserva pendiente bloquea el recurso para todos, también para un responsable. Si un responsable quiere ese hueco, primero rechaza la pendiente y luego reserva.
+8. Un responsable puede reservar aunque haya reservas pendientes en esa franja; solo le bloquean las aprobadas (reglas 5 y 6 contando solo las `APROBADA`).
+   - Si la franja cabe contando también las pendientes, no se rechaza ninguna.
+   - Si no cabe, se rechazan (pasan a `RECHAZADA`) las pendientes necesarias, una a una: en el momento de máxima ocupación de la franja, la más reciente de las pendientes que lo ocupan, hasta que quepa. Sin aforo compartido, eso acaba rechazando todas las que se solapan.
+   - Si no cabe ni sin las pendientes, no se reserva ni se rechaza nada.
+   - La respuesta indica las pendientes rechazadas, en el orden en que se rechazaron.
 
 ## Aprobar o rechazar
 9. Solo un responsable, y solo sobre reservas `PENDIENTE`.
 10. Aprobar: pasa a `APROBADA` y se guarda quién la aprobó.
 11. Rechazar: pasa a `RECHAZADA`.
-12. Al aprobar no se vuelven a comprobar conflictos: la reserva pendiente ya bloqueaba su franja, así que nadie ha podido reservar encima.
+12. Al aprobar no se vuelven a comprobar conflictos: mientras una reserva está pendiente, solo un responsable puede reservar encima (regla 8), y si estorba la rechaza al hacerlo.
 
 21) Solo se aprueba una reserva que no ha comenzado (concepto «Inicio»). Una pendiente que ya ha comenzado solo se puede rechazar; mientras no se rechace, sigue activa y ocupando el recurso.
 
@@ -58,3 +62,4 @@
    - Por horas: las franjas libres dentro del día, de 00:00 a 23:59 (la hora de fin máxima, regla 2).
    - Día completo: si está disponible o no.
    - Con aforo compartido: la capacidad libre en cada franja.
+   - Para cada franja y para el día completo, también si está libre sin contar las pendientes: lo que puede reservar un responsable (regla 8).

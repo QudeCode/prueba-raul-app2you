@@ -13,10 +13,12 @@ import {
   aMinutos,
   diaReservable,
   Disponibilidad,
+  disponibilidadPara,
   FIN_DIA,
   Modalidad,
   modalidadesDe,
   motivoNoReservable,
+  pendientesQueEstorban,
   primerMinuto,
   ReservaNueva,
   Seleccion,
@@ -36,6 +38,8 @@ export class ReservaModal {
   readonly disponibilidad = input.required<HttpResourceRef<Disponibilidad | undefined>>();
   readonly enviando = input(false);
   readonly error = input<string | null>(null);
+  /** A un responsable solo le bloquean las aprobadas (regla 8). */
+  readonly responsable = input(false);
 
   readonly confirmar = output<ReservaNueva>();
   readonly cerrar = output();
@@ -64,9 +68,16 @@ export class ReservaModal {
     () => !this.modalidades().some((m) => diaReservable(this.fecha(), m, this.ahora())),
   );
 
+  /** La disponibilidad del día tal cual, con las pendientes. */
   protected readonly datos = computed(() => {
     const d = this.disponibilidad();
     return d.hasValue() ? d.value() : null;
+  });
+
+  /** Lo que el usuario actual puede reservar: sin las pendientes si es responsable. */
+  protected readonly vista = computed(() => {
+    const d = this.datos();
+    return d && disponibilidadPara(d, this.responsable());
   });
 
   protected readonly seleccion = computed<Seleccion | null>(() =>
@@ -84,10 +95,26 @@ export class ReservaModal {
       fecha: this.fecha(),
       seleccion: this.seleccion(),
       asistentes: this.asistentes(),
-      disponibilidad: this.datos(),
+      disponibilidad: this.vista(),
       ahora: this.ahora(),
     }),
   );
+
+  /** Pendientes que se rechazarán al confirmar (regla 8); solo para un responsable. */
+  protected readonly estorban = computed(() => {
+    const datos = this.datos();
+    const modalidad = this.modalidad();
+    if (!this.responsable() || this.motivo() !== null || !datos || !modalidad) {
+      return [];
+    }
+    return pendientesQueEstorban({
+      recurso: this.recurso(),
+      modalidad,
+      seleccion: this.seleccion(),
+      asistentes: this.asistentes(),
+      disponibilidad: datos,
+    });
+  });
 
   constructor() {
     // Al cambiar de día se borra la selección
@@ -105,7 +132,7 @@ export class ReservaModal {
   }
 
   protected elegirCelda(celda: Seleccion): void {
-    const franjas = this.datos()?.franjas;
+    const franjas = this.vista()?.franjas;
     if (!franjas) {
       return;
     }

@@ -1,7 +1,7 @@
 import calendar
 from collections.abc import Callable
 from datetime import date, datetime, time, timedelta
-from typing import Annotated
+from typing import Annotated, NamedTuple
 
 from fastapi import Depends
 
@@ -14,6 +14,7 @@ from app.reservas.dto import (
     DiaOcupadoRespuesta,
     DisponibilidadRespuesta,
     FranjaRespuesta,
+    ReservaCreadaRespuesta,
     ReservaPeticion,
     ReservaRespuesta,
 )
@@ -37,21 +38,53 @@ def franja_de(hora_inicio: time | None, hora_fin: time | None) -> tuple[time, ti
     return hora_inicio, hora_fin
 
 
-def tramos(ocupaciones: list[tuple[time, time, int]]) -> list[tuple[time, time, int]]:
+def solapa(inicio_a: time, fin_a: time, inicio_b: time, fin_b: time) -> bool:
+    """Concepto «Solapamiento»: cubre solapes parciales, totales y una franja contenida en otra."""
+    return inicio_a < fin_b and inicio_b < fin_a
+
+
+class Ocupacion(NamedTuple):
+    """Lo que ocupa una reserva activa en el día."""
+
+    inicio: time
+    fin: time
+    carga: int
+    pendiente: bool
+
+
+class Tramo(NamedTuple):
+    """Un tramo del día con su ocupación, con y sin las reservas pendientes."""
+
+    desde: time
+    hasta: time
+    carga: int
+    carga_sin_pendientes: int
+
+
+def tramos(ocupaciones: list[Ocupacion]) -> list[Tramo]:
     """Parte [00:00, 23:59) por los inicios y fines de las ocupaciones y suma la de cada tramo.
 
-    Los tramos vecinos con la misma ocupación se fusionan. Responde a la regla 20 y valida
-    las reglas 5 y 6 con la misma partición (decisión 0013).
+    Los tramos vecinos con las dos cargas iguales se fusionan. Responde a la regla 20 y valida
+    las reglas 5, 6 y 8 con la misma partición (decisiones 0013 y 0016).
     """
-    cortes = sorted({INICIO_DIA, FIN_DIA} | {t for i, f, _ in ocupaciones for t in (i, f)})
-    resultado: list[tuple[time, time, int]] = []
+    cortes = sorted({INICIO_DIA, FIN_DIA} | {t for o in ocupaciones for t in (o.inicio, o.fin)})
+    resultado: list[Tramo] = []
     for desde, hasta in zip(cortes, cortes[1:]):
-        carga = sum(o for inicio, fin, o in ocupaciones if inicio < hasta and desde < fin)
-        if resultado and resultado[-1][2] == carga:
-            resultado[-1] = (resultado[-1][0], hasta, carga)
+        cubren = [o for o in ocupaciones if solapa(o.inicio, o.fin, desde, hasta)]
+        carga = sum(o.carga for o in cubren)
+        sin_pendientes = sum(o.carga for o in cubren if not o.pendiente)
+        anterior = resultado[-1] if resultado else None
+        if anterior and (anterior.carga, anterior.carga_sin_pendientes) == (carga, sin_pendientes):
+            resultado[-1] = anterior._replace(hasta=hasta)
         else:
-            resultado.append((desde, hasta, carga))
+            resultado.append(Tramo(desde, hasta, carga, sin_pendientes))
     return resultado
+
+
+def pico(tramos_del_dia: list[Tramo], inicio: time, fin: time) -> Tramo | None:
+    """El tramo de más carga que se solapa con [inicio, fin); el primero si empatan."""
+    solapados = [t for t in tramos_del_dia if solapa(t.desde, t.hasta, inicio, fin)]
+    return max(solapados, key=lambda t: t.carga, default=None)
 
 
 def inicio_de(fecha: date, hora_inicio: time | None) -> datetime:
@@ -94,6 +127,56 @@ def capacidad_compartida(recurso: RecursoRespuesta) -> int | None:
 def ocupacion(reserva: Reserva, aforo: bool) -> int:
     """Lo que ocupa una reserva: sus asistentes con aforo compartido; el recurso entero sin él."""
     return (reserva.asistentes_sala or 0) if aforo else 1
+
+
+def ocupaciones(reservas: list[Reserva], aforo: bool) -> list[Ocupacion]:
+    return [
+        Ocupacion(
+            *franja_de(r.hora_inicio, r.hora_fin),
+            ocupacion(r, aforo),
+            r.estado == EstadoReserva.PENDIENTE,
+        )
+        for r in reservas
+    ]
+
+
+def pendientes_a_rechazar(
+    reservas: list[Reserva],
+    inicio: time,
+    fin: time,
+    asistentes: int | None,
+    capacidad: int | None,
+) -> list[Reserva]:
+    """Regla 8: las pendientes que un responsable rechaza al reservar [inicio, fin), en orden.
+
+    Sin aforo compartido cuenta como capacidad 1 con ocupación 1 por reserva, así que acaba
+    rechazando todas las solapadas. Mientras no quepa, en el momento de máxima ocupación se
+    rechaza la pendiente más reciente que lo ocupa. Las candidatas se buscan en un punto y no
+    en el tramo, que puede ser la fusión de varias pendientes contiguas (decisión 0016).
+
+    Precondición: la franja cabe contando solo las aprobadas de `reservas`. Así siempre hay
+    candidata: si nadie pendiente ocupara el punto, su carga sería solo de aprobadas, que ya
+    cabía. Y cada candidata ocupa un punto de [inicio, fin), así que se solapa con la franja.
+    """
+    aforo = capacidad is not None
+    tope = capacidad if capacidad is not None else 1
+    nueva = (asistentes or 0) if aforo else 1
+    restantes = list(reservas)
+    rechazadas: list[Reserva] = []
+    while True:
+        maximo = pico(tramos(ocupaciones(restantes, aforo)), inicio, fin)
+        if maximo is None or maximo.carga + nueva <= tope:
+            return rechazadas
+        punto = max(maximo.desde, inicio)
+        candidatas = [
+            r
+            for r in restantes
+            if r.estado == EstadoReserva.PENDIENTE
+            and (franja := franja_de(r.hora_inicio, r.hora_fin))[0] <= punto < franja[1]
+        ]
+        elegida = max(candidatas, key=lambda r: (r.creada_en, r.id))
+        restantes.remove(elegida)
+        rechazadas.append(elegida)
 
 
 def reserva_a_respuesta(reserva: Reserva, ahora: datetime) -> ReservaRespuesta:
@@ -166,16 +249,16 @@ class DisponibilidadService:
 
         franjas = None
         if recurso.modalidad_reserva in POR_HORAS:
-            franjas = [
-                self._franja(recurso, desde, hasta, carga)
-                for desde, hasta, carga in self._tramos_del_dia(recurso, reservas)
-            ]
+            franjas = [self._franja(recurso, t) for t in self._tramos_del_dia(recurso, reservas)]
+        dia_completo = recurso.modalidad_reserva in DIA_COMPLETO
+        aprobadas = [r for r in reservas if r.estado == EstadoReserva.APROBADA]
         return DisponibilidadRespuesta(
             recurso_id=recurso_id,
             fecha=fecha,
             reservas=[reserva_a_respuesta(reserva, ahora) for reserva in reservas],
             franjas=franjas,
-            dia_completo_libre=(not reservas) if recurso.modalidad_reserva in DIA_COMPLETO else None,
+            dia_completo_libre=(not reservas) if dia_completo else None,
+            dia_completo_libre_sin_pendientes=(not aprobadas) if dia_completo else None,
         )
 
     def resumen_mes(self, recurso_id: int, anio: int, mes: int) -> list[DiaOcupadoRespuesta]:
@@ -194,45 +277,63 @@ class DisponibilidadService:
         inicio: time,
         fin: time,
         asistentes: int | None,
-    ) -> None:
-        """Reglas 5 y 6: lanza Conflicto si la franja no cabe con las reservas activas del día."""
-        reservas = self.repositorio.activas_del_dia(recurso.id, fecha)
+        responsable: bool,
+    ) -> list[Reserva]:
+        """Reglas 5, 6 y 8: lanza Conflicto si la franja no cabe con las reservas que bloquean.
+
+        A un trabajador le bloquean todas las activas; a un responsable, solo las aprobadas, y
+        devuelve las pendientes que tiene que rechazar (decisión 0016). Las reservas del día
+        quedan bloqueadas hasta el commit, para que nadie apruebe a la vez una que se rechaza.
+        """
+        reservas = self.repositorio.activas_del_dia_para_actualizar(recurso.id, fecha)
+        bloqueantes = (
+            [r for r in reservas if r.estado == EstadoReserva.APROBADA] if responsable else reservas
+        )
         capacidad = capacidad_compartida(recurso)
         if capacidad is not None:
-            pico = max(
-                (c for d, h, c in self._tramos_del_dia(recurso, reservas) if d < fin and inicio < h),
-                default=0,
-            )
-            if pico + (asistentes or 0) > capacidad:
+            maximo = pico(self._tramos_del_dia(recurso, bloqueantes), inicio, fin)
+            ocupados = maximo.carga if maximo else 0
+            if ocupados + (asistentes or 0) > capacidad:
                 raise Conflicto(
                     f"Se superaría la capacidad de {capacidad}: en el momento de más ocupación"
-                    f" ya hay {pico} asistentes"
+                    f" ya hay {ocupados} asistentes" + (" en reservas aprobadas" if responsable else "")
                 )
-            return
-        solapadas = [
-            reserva
-            for reserva in reservas
-            if (franja := franja_de(reserva.hora_inicio, reserva.hora_fin))[0] < fin
-            and inicio < franja[1]
-        ]
-        if solapadas:
-            raise Conflicto("La franja se solapa con: " + "; ".join(map(describir, solapadas)))
-
-    def _tramos_del_dia(
-        self, recurso: RecursoRespuesta, reservas: list[Reserva]
-    ) -> list[tuple[time, time, int]]:
-        aforo = capacidad_compartida(recurso) is not None
-        return tramos(
-            [(*franja_de(r.hora_inicio, r.hora_fin), ocupacion(r, aforo)) for r in reservas]
-        )
+        else:
+            solapadas = [
+                r for r in bloqueantes if solapa(*franja_de(r.hora_inicio, r.hora_fin), inicio, fin)
+            ]
+            if solapadas:
+                raise Conflicto("La franja se solapa con: " + "; ".join(map(describir, solapadas)))
+        if not responsable:
+            return []
+        return pendientes_a_rechazar(reservas, inicio, fin, asistentes, capacidad)
 
     @staticmethod
-    def _franja(recurso: RecursoRespuesta, desde: time, hasta: time, carga: int) -> FranjaRespuesta:
+    def _tramos_del_dia(recurso: RecursoRespuesta, reservas: list[Reserva]) -> list[Tramo]:
+        return tramos(ocupaciones(reservas, capacidad_compartida(recurso) is not None))
+
+    @staticmethod
+    def _franja(recurso: RecursoRespuesta, tramo: Tramo) -> FranjaRespuesta:
         capacidad = capacidad_compartida(recurso)
         if capacidad is not None:
-            libres = capacidad - carga
-            return FranjaRespuesta(inicio=desde, fin=hasta, libre=libres > 0, capacidad_libre=libres)
-        return FranjaRespuesta(inicio=desde, fin=hasta, libre=carga == 0, capacidad_libre=None)
+            libres = capacidad - tramo.carga
+            libres_sin_pendientes = capacidad - tramo.carga_sin_pendientes
+            return FranjaRespuesta(
+                inicio=tramo.desde,
+                fin=tramo.hasta,
+                libre=libres > 0,
+                capacidad_libre=libres,
+                libre_sin_pendientes=libres_sin_pendientes > 0,
+                capacidad_libre_sin_pendientes=libres_sin_pendientes,
+            )
+        return FranjaRespuesta(
+            inicio=tramo.desde,
+            fin=tramo.hasta,
+            libre=tramo.carga == 0,
+            capacidad_libre=None,
+            libre_sin_pendientes=tramo.carga_sin_pendientes == 0,
+            capacidad_libre_sin_pendientes=None,
+        )
 
 
 class ReservaService:
@@ -250,18 +351,23 @@ class ReservaService:
         self.disponibilidad = disponibilidad
         self.reloj = reloj
 
-    def crear(self, peticion: ReservaPeticion, usuario: UsuarioRespuesta) -> ReservaRespuesta:
-        """Orden: 404 del recurso, 400 de las reglas, bloqueo del recurso y 409 de los conflictos."""
+    def crear(self, peticion: ReservaPeticion, usuario: UsuarioRespuesta) -> ReservaCreadaRespuesta:
+        """Orden: 404 del recurso, 400 de las reglas, bloqueo del recurso y 409 de los conflictos.
+
+        Un responsable rechaza en la misma transacción las pendientes que estorban (regla 8).
+        """
         recurso = self.recursos.obtener(peticion.recurso_id)
         inicio, fin = self._validar(peticion, recurso)
+        responsable = usuario.rol == Rol.RESPONSABLE
 
         self.repositorio.bloquear_recurso(recurso.id)
-        self.disponibilidad.comprobar_hueco(
-            recurso, peticion.fecha, inicio, fin, peticion.asistentes_sala
+        rechazadas = self.disponibilidad.comprobar_hueco(
+            recurso, peticion.fecha, inicio, fin, peticion.asistentes_sala, responsable
         )
+        for pendiente in rechazadas:
+            pendiente.estado = EstadoReserva.RECHAZADA
 
         # Regla 7: un responsable reserva ya aprobada, con él mismo como aprobador
-        responsable = usuario.rol == Rol.RESPONSABLE
         reserva = Reserva(
             recurso_id=recurso.id,
             titular_id=usuario.id,
@@ -273,10 +379,14 @@ class ReservaService:
             estado=EstadoReserva.APROBADA if responsable else EstadoReserva.PENDIENTE,
         )
         self.repositorio.guardar(reserva)
-        return self._confirmar(reserva.id)
+        self.repositorio.confirmar()
+        return ReservaCreadaRespuesta(
+            **dict(self._releer(reserva.id)),
+            rechazadas=[self._releer(r.id) for r in rechazadas],
+        )
 
     def aprobar(self, reserva_id: int, usuario: UsuarioRespuesta) -> ReservaRespuesta:
-        """Reglas 9, 10, 12 y 21: no vuelve a comprobar conflictos, la pendiente ya bloqueaba su franja."""
+        """Reglas 9, 10, 12 y 21: no vuelve a comprobar conflictos; solo un responsable reserva encima."""
         reserva = self._obtener(reserva_id, para_actualizar=True)
         self._exigir_pendiente_y_responsable(reserva, usuario, "aprobar")
         if comenzada(inicio_de(reserva.fecha, reserva.hora_inicio), self.reloj()):
@@ -400,8 +510,11 @@ class ReservaService:
             )
 
     def _confirmar(self, reserva_id: int) -> ReservaRespuesta:
-        """Confirma y relee la reserva, para que `creada_en` y las relaciones estén cargados."""
         self.repositorio.confirmar()
+        return self._releer(reserva_id)
+
+    def _releer(self, reserva_id: int) -> ReservaRespuesta:
+        """Relee la reserva ya confirmada, para que `creada_en` y las relaciones estén cargados."""
         reserva = self.repositorio.obtener(reserva_id)
         assert reserva is not None
         return reserva_a_respuesta(reserva, self.reloj())
