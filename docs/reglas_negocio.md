@@ -17,7 +17,7 @@
 ## Crear una reserva
 1. Una reserva ocupa como máximo un día: una sola `fecha`. Para varios días hacen falta varias reservas.
 2. La modalidad debe ser válida para el tipo de recurso.
-   - Por horas: `hora_inicio` y `hora_fin` informadas, con `hora_inicio < hora_fin`.
+   - Por horas: `hora_inicio` y `hora_fin` informadas, con `hora_inicio < hora_fin`. `hora_fin` es como muy tarde las 23:59.
    - Día completo: sin horas.
 3. No se puede reservar en el pasado.
 4. `asistentes_sala`: obligatorio y `>= 1` en salas con aforo compartido; vacío en el resto de recursos.

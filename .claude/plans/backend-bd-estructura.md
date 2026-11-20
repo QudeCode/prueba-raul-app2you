@@ -42,10 +42,11 @@ Lo que ha decidido el usuario:
 |---|---|
 | 0001 (ADR) | Monolito dividido en módulos (`usuarios`, `recursos`, `reservas`) con capas controller/service/repository y un fichero por capa: `controller.py`, `dto.py`, `service.py`, `repository.py`, `entity.py`. Reglas: el controller no importa entidades; el repository no importa DTO; el servicio hace las conversiones (sin Mapper) y devuelve DTO |
 | 0002 | FastAPI + SQLAlchemy 2.0 síncrono + Pydantic v2. Sin SQLModel, porque mezcla DTO y entidad. Conexión entre capas con `Depends`. La sesión por petición no hace commit automático: los servicios que escriben hacen commit de forma explícita, antes de responder |
-| 0003 (ADR), sustituida por 0007 | PostgreSQL en Docker Compose (`docker compose up -d`), configurado con `DATABASE_URL` en `.env`. Esquema con `create_all` desde un script que también carga datos de prueba. Sin migraciones; Alembic sería el camino si el proyecto creciera |
+| 0003 (ADR) · sustituida por 0007 | PostgreSQL instalado en local (sin Docker), configurado con `DATABASE_URL` en `.env`. Esquema con `create_all` desde un script que también carga datos de prueba. Sin migraciones; Alembic sería el camino si el proyecto creciera |
 | 0004 | Enums como `StrEnum`, guardados como `VARCHAR` + `CHECK` generado desde el propio enum. Las invariantes de una sola fila también llevan `CHECK` con nombre. Las horas son `TIME` y una reserva por horas acaba como muy tarde a las 23:59 (Python no puede representar las 24:00) |
 | 0005 | Herencia de recursos en una sola tabla `recurso` con la columna discriminadora `tipo`. `MODALIDAD_RESERVA` e `IMAGEN` son constantes de clase, no columnas. Las imágenes son ficheros fijos del frontend; la API devuelve su nombre |
 | 0006 | Código en español para el dominio y en inglés para los nombres de las capas |
+| 0007 (ADR) | Sustituye a la 0003 (en la tarea 3 resultó que no había PostgreSQL instalado). PostgreSQL 17 en Docker Compose (`docker compose up -d`), puerto solo en `127.0.0.1`, credenciales de desarrollo fijas y `DATABASE_URL` en `.env`. Esquema con `create_all` desde el seed y sin migraciones, como en la 0003 |
 
 Se dejan para el plan de reservas, que es donde se usan: los errores del dominio con su manejador (404/403/400/409) y el usuario actual por la cabecera `X-Usuario-Id`.
 
@@ -125,7 +126,8 @@ Se dejan para el plan de reservas, que es donde se usan: los errores del dominio
     - `ck_reserva_horas_juntas`: `(hora_inicio IS NULL) = (hora_fin IS NULL)`;
     - `ck_reserva_horas_orden`: `hora_inicio < hora_fin`;
     - `ck_reserva_asistentes`: `asistentes_sala IS NULL OR asistentes_sala >= 1`;
-    - `ck_reserva_aprobada_con_aprobador`: `estado <> 'APROBADA' OR aprobada_por_id IS NOT NULL`.
+    - `ck_reserva_aprobada_con_aprobador`: `estado <> 'APROBADA' OR aprobada_por_id IS NOT NULL`;
+    - `ck_reserva_hora_fin_maxima`: `hora_fin <= '23:59'` (regla 2; añadido en la revisión final: PostgreSQL acepta `24:00` en `TIME` y Python no puede leerlo).
   - **Índices:** `ix_reserva_recurso_fecha` en `(recurso_id, fecha)` e `ix_reserva_titular`.
 - Las reglas que mezclan tablas (la modalidad según el tipo, `asistentes_sala` solo en salas con aforo compartido) van en el servicio, en el plan siguiente.
 
@@ -140,6 +142,9 @@ Se dejan para el plan de reservas, que es donde se usan: los errores del dominio
     - **equipos:** "Proyector portátil" (PRY-2041, FLEXIBLE), "Portátil de préstamo" (PRT-1187, MODERADA) y "Cámara de vídeo" (CAM-0532, BLOQUEADA).
 - Las reservas aleatorias se generarán en el plan siguiente, a través del servicio, para que cumplan las reglas.
 
+**Frontend** (fuera del plan original, a petición del usuario)
+- `src/frontend/src/app/app.ts` y `app.html`: comprobación provisional de conexión. Un `fetch` a `GET /usuarios` y `GET /recursos` de `localhost:8000` que pinta el código y el cuerpo, sin estilos. Necesita el CORS de `main.py` para `localhost:4200`. Se retira al crear las pantallas reales.
+
 **Documentación**
 - `README.md`: cargar los datos de prueba (`python -m app.seed`). El requisito de Docker, `docker compose up -d` y la copia del `.env` ya están (decisión 0007).
 - `docs/diagramas/modelo_bd.puml`: `creada_en` pasa a `TIMESTAMPTZ` (hecho en la tarea 3).
@@ -151,7 +156,9 @@ Se dejan para el plan de reservas, que es donde se usan: los errores del dominio
 3. Las tres entidades, `entidades.py` y el script de datos de prueba. Comprobar en `psql` las tablas y los `CHECK`, y que `\dT` no lista tipos enum.
 4. Módulo usuarios y `GET /usuarios`.
 5. Módulo recursos y `GET /recursos`.
-6. README y la regla 2.
+6. README y la regla 2. **Hecho.**
+
+Tareas 1 a 6 hechas. Revisión final con `dev:revisar-cambios` a nivel completo (desde `ec5a664`): sin bloqueos. Se aplicaron el `CHECK ck_reserva_hora_fin_maxima`, esta tabla de decisiones y la línea del frontend. Se descartó ampliar `es_local` a `?host=` en la URL: innecesario para la prueba técnica (decisión del usuario). Quedan para más adelante la accesibilidad de la página provisional y dos mejoras menores (`length=None` en `tipo_enum`, `dict` sin tipar en `recursos/service.py`).
 
 ## Riesgos
 - **PostgreSQL en Docker Compose:** se arranca en local (no dentro del devcontainer) y desde el devcontainer se llega por `host.docker.internal:5432`.

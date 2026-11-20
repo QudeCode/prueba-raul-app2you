@@ -48,8 +48,11 @@ cd src/backend
 python3 -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+python -m app.seed               # crea las tablas y carga los datos de prueba (borra lo que hubiera)
 uvicorn app.main:app --reload
 ```
+
+> El seed necesita la base de datos arrancada y el `.env` copiado (apartado anterior). Carga 4 usuarios y 8 recursos, sin reservas, y se puede repetir para volver al estado inicial. Solo actúa sobre una base local: si la `DATABASE_URL` apunta a otra máquina, se niega a borrar nada.
 
 ### Frontend → http://localhost:4200
 

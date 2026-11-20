@@ -12,3 +12,6 @@ En el devcontainer, con un venv propio fuera del repo (nunca `src/backend/.venv`
 
 ## Gotchas
 - No hay tests a propósito: su ausencia no es un fallo.
+- `DATABASE_URL` no se lee de `.env` (está denegado): expórtala en el entorno, que manda sobre `.env`. La del Compose desde el contenedor es `postgresql+psycopg://reservas:reservas@host.docker.internal:5432/reservas` (credenciales de desarrollo, las mismas de `.env.example`). Con `localhost` no llega.
+- `src/frontend/node_modules` es el de la máquina local (esbuild compilado para su sistema): `npm run build` falla en el devcontainer. Compila una copia del frontend sin `node_modules` con su propio `npm ci`, fuera del repo.
+- `python -m app.seed` borra y recrea las tablas: solo con autorización explícita en el encargo.

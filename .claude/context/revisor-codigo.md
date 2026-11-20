@@ -9,6 +9,7 @@ Sin autenticación (prueba técnica). El usuario actual llega por la cabecera `X
 ## Convenciones que se revisan
 - Capas de la decisión 0001: el controller no importa entidades; el repository no importa DTO; el servicio devuelve DTO.
 - Enums como `StrEnum` con `CHECK` generado por `check_enum` (decisión 0004).
+- Cada regla de una sola fila de `docs/reglas_negocio.md` (también los límites de hora, como las 23:59) tiene su `CheckConstraint` con nombre en la entidad (decisión 0004).
 - Dominio en español, nombres de capa en inglés (decisión 0006).
 - Reglas de negocio citadas por su número de `docs/reglas_negocio.md`.
 
